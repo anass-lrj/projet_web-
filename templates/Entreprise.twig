@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des entreprises</title>
+</head>
+<body>
+    <h1>Liste des entreprises</h1>
+
+    <?php if (empty($entreprises)): ?>
+        <p>Aucune entreprise trouvée.</p>
+    <?php else: ?>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Secteur</th>
+                    <th>Ville</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($entreprises as $entreprise): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($entreprise['id']); ?></td>
+                        <td><?= htmlspecialchars($entreprise['nom']); ?></td>
+                        <td><?= htmlspecialchars($entreprise['secteur']); ?></td>
+                        <td><?= htmlspecialchars($entreprise['ville']); ?></td>
+                        <td><?= htmlspecialchars($entreprise['description']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</body>
+</html>
