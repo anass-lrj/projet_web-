@@ -1,0 +1,48 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('user-add') }}" class="btn btn-primary mb-4">Ajouter un utilisateur</a>
+
+
+    <div class="row">
+        {% for user in users %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ user.name }}</h5>
+                        <p class="card-text"><strong>Email :</strong> {{ user.email }}</p>
+                        <p class="card-text"><strong>Inscription :</strong> {{ user.registeredAt|date('d/m/Y H:i') }}</p>
+                        <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-primary">Modifier</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center">Aucun utilisateur trouvé.</p>
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if currentPage > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('paginatedList', {page: currentPage - 1}) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for i in 1..totalPages %}
+                <li class="page-item {% if i == currentPage %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('paginatedList', {page: i}) }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+            {% if currentPage < totalPages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('paginatedList', {page: currentPage + 1}) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

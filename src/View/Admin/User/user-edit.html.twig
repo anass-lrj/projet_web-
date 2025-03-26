@@ -1,0 +1,29 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+
+{{ dump(userEntity) }}
+
+
+<form method="post" action="{{ add ? url_for('user-add') : url_for('user-edit', {'idUser': userEntity.id}) }}" class="mt-4">
+    <!--<div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" class="form-control" id="username" name="username" value="{{ userEntity.username }}" required>
+    </div>-->
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
+    </div>
+    <!--
+    <div class="form-group">
+        <label for="role">Role</label>
+        <select class="form-control" id="role" name="role">
+            <option value="admin" {% if userEntity.role == 'admin' %}selected{% endif %}>Admin</option>
+            <option value="user" {% if userEntity.role == 'user' %}selected{% endif %}>User</option>
+        </select>
+    </div>
+    -->
+    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+</form>
+
+{% endblock %}

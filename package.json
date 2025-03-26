@@ -1,0 +1,25 @@
+{
+  "name": "projet_web-",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anass-lrj/projet_web-.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anass-lrj/projet_web-/issues"
+  },
+  "homepage": "https://github.com/anass-lrj/projet_web-#readme",
+  "description": "",
+  "dependencies": {
+    "@zackad/prettier-plugin-twig": "^0.16.0"
+  }
+}
