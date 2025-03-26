@@ -7,7 +7,13 @@ class Entreprise {
     private $ville;
     private $description;
 
-    // Définir la connexion PDO
+    public function __construct($id, $nom, $secteur, $ville, $description) {
+        $this->id = $id;
+        $this->nom = $nom;
+        $this->secteur = $secteur;
+        $this->ville = $ville;
+        $this->description = $description;
+    }
     public static function getPDO() {
         try {
             $pdo = new PDO('mysql:host=localhost;dbname=liste_entreprises', 'root', '');
