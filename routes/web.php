@@ -24,7 +24,11 @@ return function (App $app) {
         $view = Twig::fromRequest($request);
         return $view->render($response, 'entreprise.twig', ['entreprise' => 'Entreprise']);
     });
-
+    // Page Contact 
+    $app->get('/contact', function (Request $request, Response $response, $args) {
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'contact.twig', ['contact' => 'Contact']);
+    });
    
 
 };
