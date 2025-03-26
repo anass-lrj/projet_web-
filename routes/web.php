@@ -24,6 +24,7 @@ return function (App $app) {
         $view = Twig::fromRequest($request);
         return $view->render($response, 'entreprise.twig', ['entreprise' => 'Entreprise']);
     });
+
    
 
 };

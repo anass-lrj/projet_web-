@@ -4,6 +4,7 @@ use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config/config.php';
 
 // Charger le conteneur DI
 $container = require __DIR__ . '/../config/container.php';
