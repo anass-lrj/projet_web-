@@ -1,0 +1,93 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    <div class="hero">
+      <div class="container centre">
+        <h1 class="display-5 fw-bold">Contactez-nous</h1>
+      </div>
+
+      <div class="container my-5">
+        <form id="contactForm">
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Nom</label>
+            <input class="form-control" id="exampleFormControlTextarea1" />
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Prénom</label>
+            <input class="form-control" id="exampleFormControlTextarea2" />
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Téléphone</label>
+            <input
+              type="phone"
+              class="form-control"
+              id="exampleFormControlTextarea3"
+            />
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Email address</label>
+            <input
+              type="email"
+              class="form-control"
+              id="exampleFormControlInput1"
+              placeholder="name@example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlSelect1">Motif du contact</label>
+            <select class="form-control" id="exampleFormControlSelect1">
+              <option>Signalement d'offre</option>
+              <option>Bug</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlTextarea4">Commentaire</label>
+            <textarea
+              class="form-control"
+              id="exampleFormControlTextarea1"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlFile1">Fichier si nécéssaire</label
+            ><br />
+            <input type="file" class="form-control-file" id="fileUpload" />
+            <h6 class="text-muted">Taille maximale du fichier : 5 Mo</h6>
+
+            <!-- Alerte d'erreur -->
+            <div
+              class="alert alert-danger d-none mt-2"
+              id="fileError"
+              role="alert"
+            ></div>
+          </div>
+          <div class="p-4 shadow-sm bg-light">
+            <div class="d-flex justify-content-center flex-wrap gap-2 marge">
+              <button class="btn btn-success" type="submit" id="contactButton">
+                Envoyer
+              </button>
+            </div>
+          </div>
+
+          <!-- Alerte Bootstrap -->
+          <div
+            class="alert alert-success alert-dismissible fade show d-none"
+            id="contactAlert"
+            role="alert"
+          >
+            Merci de nous avoir contactés ! Nous vous répondrons bientôt.
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
