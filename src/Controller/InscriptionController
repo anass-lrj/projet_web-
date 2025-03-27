@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Controller;
+
+use App\Domain\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+
+class InscriptionController extends AbstractController
+{
+    #[Route("/inscription", name: "inscription", methods: ['POST'])]
+    public function inscription(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $passwordEncoder): Response
+    {
+        // Récupération des données du formulaire
+        $email = $request->request->get('email');
+        $prenom = $request->request->get('prenom');
+        $password = $request->request->get('password');
+        $role = 'utilisateur';  // Rôle par défaut
+
+        // Vérification si l'email existe déjà
+        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existingUser) {
+            return $this->json(['message' => 'Cet email est déjà utilisé'], Response::HTTP_CONFLICT);
+        }
+
+        // Hacher le mot de passe
+        $hashedPassword = $passwordEncoder->encodePassword(new User($email, $password, $prenom), $password);
+
+        // Créer un nouvel utilisateur
+        $user = new User($email, $hashedPassword, $prenom, $role);
+
+        // Persister l'utilisateur en base de données
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Utilisateur créé avec succès'], Response::HTTP_CREATED);
+    }
+}
