@@ -57,7 +57,7 @@
             background-color: #0056b3;
         }
 
-        .overlay {
+        .overlayConnexion {
           position: fixed;
           top: 0;
           left: 0;
@@ -70,11 +70,33 @@
           z-index: 1000; 
         }
 
-        .overlay-content {
+        .overlayConnexion-content {
           background-color: white;
           padding: 20px;
           border-radius: 10px;
-          text-align: center;
+          text-align: left;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
+        .overlayInscription {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.7); 
+          display: none;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000; 
+        }
+
+        .overlayInscription-content {
+          background-color: white;
+          padding: 20px;
+          border-radius: 10px;
+          text-align: left;
           max-width: 500px;
           margin: 0 auto;
         }
@@ -112,6 +134,30 @@
         }
 
         .btn_fermer_connexion:hover {
+          background-color: #384324;
+        }
+
+        .btn_s_inscrire{
+          padding: 10px 10px;
+          background-color: #009000;
+          color: white;
+          border: none;
+          cursor: pointer;
+        }
+
+        .btn_s_inscrire:hover {
+          background-color: #0a5c0a;
+        }
+
+        .btn_fermer_inscription{
+          padding: 10px 10px;
+          background-color: #556B2F;
+          color: white;
+          border: none;
+          cursor: pointer;
+        }
+
+        .btn_fermer_inscription:hover {
           background-color: #384324;
         }
 
@@ -171,10 +217,10 @@
                 aria-labelledby="userDropdown"
               >
                 <li>
-                  <a class="dropdown-item" href="#" onclick="showOverlay()">Se connecter</a>
+                  <a class="dropdown-item" href="#" onclick="showOverlayConnexion()">Se connecter</a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="logout.html">
+                  <a class="dropdown-item"  href="#" onclick="showOverlayInscription()">
                     S'inscrire
                   </a>
                 </li>
@@ -205,20 +251,46 @@
         }
     </script>
 
-    <div id="overlay" class="overlay">
-        <div class="overlay-content">
-            <h3>Vous êtes invité à vous connecter.</h3> <br>
+    <div id="overlayConnexion" class="overlayConnexion">
+        <div class="overlayConnexion-content">
+            <h3>Vous pouvez vous connecter ici !</h3> <br>
             <form action="/login" method="GET">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Nom d'utilisateur</label>
+                    <label for="username" class="form-label">Nom d'utilisateur :</label>
                     <input type="text" class="form-control" id="username" name="username" required>
                 </div>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Mot de passe</label>
+                    <label for="password" class="form-label">Mot de passe :</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 <button type="submit" class="btn_se_connecter">Se connecter</button>
-                <button class="btn_fermer_connexion" onclick="closeOverlay()">Fermer</button>
+                <button class="btn_fermer_connexion" onclick="closeOverlayConnexion()">Fermer</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="overlayInscription" class="overlayInscription">
+        <div class="overlayInscription-content">
+            <h3>Vous pouvez vous inscire ici ! </h3> <br>
+            <form>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Votre nom :</label>
+                    <input type="text" class="form-control" id="nom" name="nom" required>
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Votre prénom :</label>
+                    <input type="text" class="form-control" id="prenom" name="prenom" required>
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Votre nom d'utilisateur :</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Votre mot de passe :</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn_s_inscrire">S'inscrire</button>
+                <button class="btn_fermer_inscription" onclick="closeOverlayInscription()">Fermer</button>
             </form>
         </div>
     </div>
@@ -273,12 +345,20 @@
       {% endblock %}
     </div>
     <script>
-      function showOverlay() {
-        document.getElementById('overlay').style.display = 'flex'; // Afficher l'overlay
+      function showOverlayConnexion() {
+        document.getElementById('overlayConnexion').style.display = 'flex';
       }
 
-      function closeOverlay() {
-        document.getElementById('overlay').style.display = 'none'; // Masquer l'overlay
+      function closeOverlayConnexion() {
+        document.getElementById('overlayConnexion').style.display = 'none';
+      }
+
+      function showOverlayInscription() {
+        document.getElementById('overlayInscription').style.display = 'flex';
+      }
+
+      function closeOverlayInscription() {
+        document.getElementById('overlayInscription').style.display = 'none';
       }
     </script>
 
