@@ -256,8 +256,8 @@
             <h3>Vous pouvez vous connecter ici !</h3> <br>
             <form action="/login" method="GET">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Nom d'utilisateur :</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+                    <label for="username" class="form-label">Votre email :</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Mot de passe :</label>
@@ -272,7 +272,7 @@
     <div id="overlayInscription" class="overlayInscription">
         <div class="overlayInscription-content">
             <h3>Vous pouvez vous inscire ici ! </h3> <br>
-            <form>
+            <form action="/inscription" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label">Votre nom :</label>
                     <input type="text" class="form-control" id="nom" name="nom" required>
@@ -282,8 +282,8 @@
                     <input type="text" class="form-control" id="prenom" name="prenom" required>
                 </div>
                 <div class="mb-3">
-                    <label for="username" class="form-label">Votre nom d'utilisateur :</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+                    <label for="username" class="form-label">Votre email :</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Votre mot de passe :</label>

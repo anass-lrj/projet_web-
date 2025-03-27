@@ -18,6 +18,7 @@ use App\Controller\contactController;
 
 
 require __DIR__ . '/../vendor/autoload.php';
+
 // Charger le conteneur DI
 $container = require __DIR__ . '/../bootstrap.php';
 AppFactory::setContainer($container);
