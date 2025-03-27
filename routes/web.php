@@ -23,7 +23,7 @@ return function (App $app) {
         return $view->render($response, 'entreprise.twig', );
     });
     // Page Contact 
-    $app->get('/contact', function (Request $request, Response $response, $args) {
+    $app->get('/cont', function (Request $request, Response $response, $args) {
         $view = Twig::fromRequest($request);
         return $view->render($response, 'contact.twig', );
     });
