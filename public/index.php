@@ -12,6 +12,7 @@ use Slim\Psr7\Factory\ResponseFactory;
 use App\Middlewares\UserMiddleware;
 use App\Controller\HomeController;
 use App\Controller\CGUController;
+use App\Controller\MentionslegalesController;
 use App\Controller\Admin\UserAdminController;
 
 
@@ -75,5 +76,9 @@ $container->set(UserAdminController::class, function () use ($container) {
 });
 $container->get(UserAdminController::class)->registerRoutes($app);
 
+$container->set(MentionslegalesController::class, function () use ($container) {
+    return new MentionslegalesController($container);
+});
+$container->get(MentionslegalesController::class)->registerRoutes($app);
 
 $app->run();
