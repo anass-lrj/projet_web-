@@ -15,6 +15,7 @@ use App\Controller\CGUController;
 use App\Controller\MentionslegalesController;
 use App\Controller\Admin\UserAdminController;
 use App\Controller\contactController;
+use App\Controller\EntrepriseController;
 
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -87,5 +88,10 @@ $container->set(contactController::class, function () use ($container) {
     return new contactController($container);
 });
 $container->get(contactController::class)->registerRoutes($app);
+
+$container->set(EntrepriseController::class, function () use ($container) {
+    return new EntrepriseController($container);
+});
+$container->get(EntrepriseController::class)->registerRoutes($app);
 
 $app->run();
