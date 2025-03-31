@@ -1,17 +1,46 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
-   <div class="hero">
-      <div class="container">
-        <h1 class="display-5 fw-bold centre">
-          CGU / Politique de confidentialité
-        </h1>
-      </div>
+<div class="container mt-4">
+    <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary mb-4">Ajouter une entreprise</a>
 
-      <!-- Main Content -->
-      <div class="container my-5">
-        <h2>entreprise list </h2>
-        
-      </div>
+    <div class="row">
+        {% for entreprise in entreprises %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ entreprise.titre }}</h5>
+                        <p class="card-text"><strong>Email :</strong> {{ entreprise.email }}</p>
+                        {% if entreprise.ville is defined and entreprise.ville %}
+                            <p class="card-text"><strong>Ville :</strong> {{ entreprise.ville }}</p>
+                        {% endif %}
+                        {% if entreprise.description is defined and entreprise.description %}
+                            <p class="card-text"><strong>Description :</strong> {{ entreprise.description }}</p>
+                        {% endif %}
+                        {% if entreprise.contactTelephone is defined and entreprise.contactTelephone %}
+                            <p class="card-text"><strong>Téléphone :</strong> {{ entreprise.contactTelephone }}</p>
+                        {% endif %}
+                        {% if entreprise.nombreStagiaires is defined and entreprise.nombreStagiaires %}
+                            <p class="card-text"><strong>Nombre de stagiaires :</strong> {{ entreprise.nombreStagiaires }}</p>
+                        {% endif %}
+                        {% if entreprise.evaluationMoyenne is defined and entreprise.evaluationMoyenne %}
+                            <p class="card-text"><strong>Évaluation moyenne :</strong> {{ entreprise.evaluationMoyenne }}</p>
+                        {% endif %}
+                        <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary">Modifier</a>
+                        <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')">Supprimer</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
+
+    <div class="pagination">
+        {% if currentPage > 1 %}
+            <a href="{{ url_for('entreprise-paginatedList', {page: currentPage - 1}) }}" class="btn btn-link">Précédent</a>
+        {% endif %}
+        {% if currentPage < totalPages %}
+            <a href="{{ url_for('entreprise-paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

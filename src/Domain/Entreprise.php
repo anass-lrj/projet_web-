@@ -2,55 +2,44 @@
 
 namespace App\Domain;
 
-use Doctrine\ORM\Mapping\Column;
-use Doctrine\ORM\Mapping\Entity;
-use Doctrine\ORM\Mapping\GeneratedValue;
-use Doctrine\ORM\Mapping\Id;
-use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping as ORM;
 
-#[Entity, Table(name: 'entreprise')]
-final class Entreprise
+#[ORM\Entity, ORM\Table(name: 'entreprise')]
+class Entreprise
 {
-    #[Id, Column(type: 'integer'), GeneratedValue(strategy: 'AUTO')]
-    private int $id;
+    #[ORM\Id, ORM\Column(type: 'integer'), ORM\GeneratedValue(strategy: 'AUTO')]
+    private ?int $id = null;
 
-    // Obligatoire
-    #[Column(type: 'string', length: 100, nullable: false)]
+    #[ORM\Column(type: 'string', length: 100, nullable: false)]
     private string $titre;
 
-    #[Column(type: 'string', length: 100, unique: true, nullable: false)]
+    #[ORM\Column(type: 'string', length: 100, unique: true, nullable: false)]
     private string $email;
 
-    // Optionnels
-    #[Column(type: 'string', length: 100, nullable: true)]
-    private ?string $ville;
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $ville = null;
 
-    #[Column(type: 'text', nullable: true)]
-    private ?string $description;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
 
-    #[Column(type: 'string', length: 20, nullable: true)]
-    private ?string $contactTelephone;
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $contactTelephone = null;
 
-    #[Column(type: 'integer', nullable: true)]
-    private ?int $nombreStagiaires;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $nombreStagiaires = null;
 
-    #[Column(type: 'float', nullable: true)]
-    private ?float $evaluationMoyenne;
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $evaluationMoyenne = null;
 
-    public function __construct(string $titre, string $email)
+    // ✅ Ajout de valeurs par défaut pour éviter l'erreur de constructeur
+    public function __construct(string $titre = '', string $email = '')
     {
         $this->titre = $titre;
         $this->email = $email;
-        $this->ville = null;
-        $this->description = null;
-        $this->contactTelephone = null;
-        $this->nombreStagiaires = null;
-        $this->evaluationMoyenne = null;
     }
 
-    // Getters et Setters
-
-    public function getId(): int
+    // ✅ Ajout d'un getter pour l'ID, car Doctrine le gère automatiquement
+    public function getId(): ?int
     {
         return $this->id;
     }
