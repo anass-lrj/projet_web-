@@ -56,8 +56,54 @@ class EntrepriseController
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
+    $add = true;
+    $em = $this->container->get(EntityManager::class);
+    
+    if (isset($args['id'])) {
+        $add = false;
+        $entreprise = $em->getRepository(Entreprise::class)->find($args['id']);
+    } else {
+        $entreprise = new Entreprise('', ''); // Initialisation avec un titre et un email vides
+    }
+
+    if ($request->getMethod() == 'POST') {
+        // Récupérer les données du formulaire
+        $titre = $request->getParsedBody()['titre'] ?? null;
+        $email = $request->getParsedBody()['email'] ?? null;
+        $ville = $request->getParsedBody()['ville'] ?? null;
+        $description = $request->getParsedBody()['description'] ?? null;
+        $contactTelephone = $request->getParsedBody()['contactTelephone'] ?? null;
+        $nombreStagiaires = $request->getParsedBody()['nombreStagiaires'] ?? null;
+        $evaluationMoyenne = $request->getParsedBody()['evaluationMoyenne'] ?? null;
+
+        // Mise à jour des propriétés de l'entreprise
+        $entreprise->setTitre($titre);
+        $entreprise->setEmail($email);
+        $entreprise->setVille($ville);
+        $entreprise->setDescription($description);
+        $entreprise->setContactTelephone($contactTelephone);
+        $entreprise->setNombreStagiaires($nombreStagiaires ? (int)$nombreStagiaires : null);
+        $entreprise->setEvaluationMoyenne($evaluationMoyenne ? (float)$evaluationMoyenne : null);
+
+        // Sauvegarde en base de données
+        $em->persist($entreprise);
+        $em->flush();
+
+        // Redirection après sauvegarde
+        if (!$add) {
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $url = $routeParser->urlFor('entreprises-edit', ['id' => $entreprise->getId()]);
+            $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
+            return $response->withHeader('Location', $url)->withStatus(302);
+        }
+    }
+
+    // Rendu de la vue
     $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/entreprise-edit.html.twig', []);
+    return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
+        'entreprise' => $entreprise,
+        'add' => $add
+    ]);
 }
 public function addEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
