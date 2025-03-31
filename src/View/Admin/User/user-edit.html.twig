@@ -2,29 +2,42 @@
 
 {% block content %}
 
-{{ dump(userEntity) }}
-
-
 <form method="post" action="{{ add ? url_for('user-add') : url_for('user-edit', {'idUser': userEntity.id}) }}" class="mt-4">
     <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" class="form-control" id="username" name="username" value="{{ userEntity.username }}" required>
+        <label for="prenom">Prénom</label>
+        <input type="text" class="form-control" id="prenom" name="prenom" value="{{ userEntity.prenom }}" required>
     </div>
+
+    <div class="form-group">
+        <label for="nom">Nom</label>
+        <input type="text" class="form-control" id="nom" name="nom" value="{{ userEntity.nom }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="dateNaissance">Date de Naissance</label>
+        <input type="date" class="form-control" id="dateNaissance" name="dateNaissance" value="{{ userEntity.dateNaissance|date('Y-m-d') }}" required>
+    </div>
+
     <div class="form-group">
         <label for="email">Email</label>
         <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
     </div>
-    
+
     <div class="form-group">
-        <label for="role">Role</label>
+        <label for="motDePasse">Mot de Passe</label>
+        <input type="password" class="form-control" id="motDePasse" name="motDePasse" value="{{ userEntity.motDePasse }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="role">Rôle</label>
         <select class="form-control" id="role" name="role">
             <option value="admin" {% if userEntity.role == 'admin' %}selected{% endif %}>Admin</option>
             <option value="pilote" {% if userEntity.role == 'pilote' %}selected{% endif %}>Pilote</option>
-            <option value="user" {% if userEntity.role == 'user' %}selected{% endif %}>User</option>
+            <option value="user" {% if userEntity.role == 'user' %}selected{% endif %}>Utilisateur</option>
         </select>
     </div>
     
-    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+    <button type="submit" class="btn btn-primary mt-3">Enregistrer les modifications</button>
 </form>
 
 {% endblock %}
