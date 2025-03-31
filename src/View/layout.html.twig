@@ -187,18 +187,12 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
-            <li class="nav-item">
-              <a class="nav-link" href="/entreprise">Entreprises</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/offre">Offres</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/wishlist">Wishlist</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/contact">Contact</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="/entreprise">Entreprises</a></li>
+            <li class="nav-item"><a class="nav-link" href="/offre">Offres</a></li>
+            <li class="nav-item"><a class="nav-link" href="/wishlist">Wishlist</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+
+            <!-- Dropdown de l'utilisateur -->
             <li class="nav-item dropdown">
               <a
                 class="nav-link dropdown-toggle btn btn-success text-white"
@@ -207,22 +201,20 @@
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
-                onclick="toggleEncadre()"
               >
-                NomUtilisateur
+                <!-- Nom d'utilisateur affiché ici -->
+                <span id="userDropdownText">NomUtilisateur</span>
               </a>
-              <div class="encadre-connexion" id="encadreConnexion"> </div>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="userDropdown"
-              >
-                <li>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <!-- Lien dynamique pour la connexion, inscription, ou déconnexion -->
+                <li id="loginLinkContainer">
                   <a class="dropdown-item" href="#" onclick="showOverlayConnexion()">Se connecter</a>
                 </li>
-                <li>
-                  <a class="dropdown-item"  href="#" onclick="showOverlayInscription()">
-                    S'inscrire
-                  </a>
+                <li id="registerLinkContainer">
+                  <a class="dropdown-item" href="#" onclick="showOverlayInscription()">S'inscrire</a>
+                </li>
+                <li id="logoutLinkContainer" style="display: none;">
+                  <a class="dropdown-item" href="#" onclick="logout()">Se déconnecter</a>
                 </li>
               </ul>
             </li>
@@ -251,12 +243,21 @@
         }
     </script>
 
+    {% set routes = {
+        'login': '/login',
+        'home': '/home'
+    } %}
+
     <div id="overlayConnexion" class="overlayConnexion">
         <div class="overlayConnexion-content">
-            <h3>Vous pouvez vous connecter ici !</h3> <br>
-            <form action="/login" method="GET">
+            <h3>Vous pouvez vous connecter ici !</h3> 
+            <br>
+
+            <div id="error-message" style="color: red; font-weight: bold;"></div>
+
+            <form id="login-form" method="POST">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Votre email :</label>
+                    <label for="email" class="form-label">Votre email :</label>
                     <input type="email" class="form-control" id="email" name="email" required>
                 </div>
                 <div class="mb-3">
@@ -264,10 +265,11 @@
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 <button type="submit" class="btn_se_connecter">Se connecter</button>
-                <button class="btn_fermer_connexion" onclick="closeOverlayConnexion()">Fermer</button>
+                <button type="button" class="btn_fermer_connexion" onclick="closeOverlayConnexion()">Fermer</button>
             </form>
         </div>
     </div>
+
 
     <div id="overlayInscription" class="overlayInscription">
         <div class="overlayInscription-content">
@@ -360,6 +362,44 @@
       function closeOverlayInscription() {
         document.getElementById('overlayInscription').style.display = 'none';
       }
+    </script>
+
+    <script>
+    $(document).ready(function() {
+        $('#login-form').submit(function(event) {
+            event.preventDefault(); // Empêche le rechargement de la page
+            $('#error-message').html(''); // Réinitialise les messages d'erreur
+
+            $.ajax({
+                url: '/login.php', // Assure-toi que l'URL est correcte pour la connexion
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    console.log("Réponse serveur :", response);
+
+                    if (response.error) {
+                        $('#error-message').html(response.error);
+                    } else if (response.success) {
+                        // Si la connexion réussit, on met à jour l'interface
+                        var username = response.username; // Nom d'utilisateur de la réponse
+                        $('#userDropdownText').text(username); // Change le texte dans le dropdown
+
+                        // Cache "Se connecter" et "S'inscrire", affiche "Se déconnecter"
+                        $('#loginLinkContainer').hide();
+                        $('#registerLinkContainer').hide();
+                        $('#logoutLinkContainer').show();
+
+                        // Optionnel : rediriger vers la page principale ou une autre page
+                        window.location.href = response.redirect;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Erreur AJAX lors de la connexion", error);
+                }
+            });
+        });
+    });
     </script>
 
   </body>

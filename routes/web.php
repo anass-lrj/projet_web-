@@ -4,6 +4,7 @@ use Slim\App;
 use Slim\Views\Twig;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Controller\AuthController;
 
 return function (App $app) {
 
@@ -42,4 +43,7 @@ return function (App $app) {
         $view = Twig::fromRequest($request);
         return $view->render($response, 'Mentions-légales.twig', );
     });
+
+    $app->get('/login', [AuthController::class, 'loginForm'])->setName('login');
+    $app->post('/login', [AuthController::class, 'login']);
 };
