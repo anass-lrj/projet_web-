@@ -203,7 +203,7 @@
                 aria-expanded="false"
               >
                 <!-- Nom d'utilisateur affiché ici -->
-                <span id="userDropdownText">NomUtilisateur</span>
+                <span id="userDropdownText">{{session.email}}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <!-- Lien dynamique pour la connexion, inscription, ou déconnexion -->
@@ -255,7 +255,7 @@
 
             <div id="error-message" style="color: red; font-weight: bold;"></div>
 
-            <form id="login-form" method="POST">
+            <form id="login-form" method="POST" action="/login">
                 <div class="mb-3">
                     <label for="email" class="form-label">Votre email :</label>
                     <input type="email" class="form-control" id="email" name="email" required>
@@ -365,41 +365,39 @@
     </script>
 
     <script>
-    $(document).ready(function() {
-        $('#login-form').submit(function(event) {
-            event.preventDefault(); // Empêche le rechargement de la page
-            $('#error-message').html(''); // Réinitialise les messages d'erreur
+    document.getElementById("login-form").addEventListener("submit", async function (event) {
+        event.preventDefault(); // Empêche le rechargement de la page
 
-            $.ajax({
-                url: '/login.php', // Assure-toi que l'URL est correcte pour la connexion
-                type: 'POST',
-                data: $(this).serialize(),
-                dataType: 'json',
-                success: function(response) {
-                    console.log("Réponse serveur :", response);
+        let formData = new FormData(this);
 
-                    if (response.error) {
-                        $('#error-message').html(response.error);
-                    } else if (response.success) {
-                        // Si la connexion réussit, on met à jour l'interface
-                        var username = response.username; // Nom d'utilisateur de la réponse
-                        $('#userDropdownText').text(username); // Change le texte dans le dropdown
-
-                        // Cache "Se connecter" et "S'inscrire", affiche "Se déconnecter"
-                        $('#loginLinkContainer').hide();
-                        $('#registerLinkContainer').hide();
-                        $('#logoutLinkContainer').show();
-
-                        // Optionnel : rediriger vers la page principale ou une autre page
-                        window.location.href = response.redirect;
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Erreur AJAX lors de la connexion", error);
-                }
+        try {
+            let response = await fetch('/login', {
+                method: 'POST',
+                body: formData
             });
-        });
+
+            // Vérifie si la réponse est en JSON et affiche la réponse brute
+            const contentType = response.headers.get('Content-Type');
+            if (contentType && contentType.includes('application/json')) {
+                let result = await response.json();
+                console.log(result);
+
+                if (result.status) {
+                    closeOverlayConnexion(); // Ferme la fenêtre de connexion si succès
+                } else {
+                    alert(result.message); // Message d’erreur renvoyé par le serveur
+                }
+            } else {
+                const textResponse = await response.text(); // Récupère la réponse brute
+                console.error('Réponse non JSON:', textResponse); // Affiche la réponse brute pour le débogage
+                throw new Error('La réponse n\'est pas au format JSON');
+            }
+        } catch (error) {
+            console.error("Erreur lors de la requête :", error);
+            alert("Une erreur est survenue. Veuillez réessayer.");
+        }
     });
+
     </script>
 
   </body>

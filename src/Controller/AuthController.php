@@ -104,11 +104,7 @@ class AuthController
         if ($user) {
             $_SESSION['user'] = [
                 'id' => $user[$id],
-                'nom' => $user['nom'],
-                'prenom' => $user['prenom'],
-                'email' => $user['mail'],
-                'statut' => $statut,
-                'id_organisation' => $user['id_organisation'] ?? null,
+                'email' => $user['mail']
             ];
 
             return $response

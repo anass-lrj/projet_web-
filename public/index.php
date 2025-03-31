@@ -15,77 +15,67 @@ use App\Controller\CGUController;
 use App\Controller\MentionslegalesController;
 use App\Controller\Admin\UserAdminController;
 use App\Controller\contactController;
-
+use Slim\Middleware\Session;
 
 require __DIR__ . '/../vendor/autoload.php';
-
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 // Charger le conteneur DI
 $container = require __DIR__ . '/../bootstrap.php';
 AppFactory::setContainer($container);
 
+// Créer l'application
 $app = AppFactory::create();
+$app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, true, true);
 
-// Ajouter Twig
-$twig = Twig::create(__DIR__ . '/../src/View', ['cache' => false,'debug' => true]);
+
+// Ajouter le middleware de session après avoir défini le conteneur
+$app->add(new Session([
+    'name' => 'my_session',
+    'autorefresh' => true,
+    'lifetime' => '1 hour'
+]));
+
+// Vérifier que la session est bien démarrée
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Ajouter Twig après l'initialisation des sessions
+$twig = Twig::create(__DIR__ . '/../src/View', ['cache' => false, 'debug' => true]);
 $twig->addExtension(new \Twig\Extension\DebugExtension());
+$twig->getEnvironment()->addGlobal('session', $_SESSION);
 $app->add(TwigMiddleware::create($app, $twig));
 
-$container->set('view', function () use ($twig) {
-    return $twig;
-});
-
-$container->set(AdminMiddleware::class, function () use ($container) {
-    return new AdminMiddleware($container);
-});
-
-$container->set(UserMiddleware::class, function () use ($container) {
-    return new UserMiddleware($container);
-});
-
-$container->set(ResponseFactoryInterface::class , function () use ($app) {
-    return $app->getResponseFactory();
-});
-
-$app->add(
-    new \Slim\Middleware\Session([
-      'name' => 'session',
-      'autorefresh' => true,
-      'lifetime' => '1 hour',
-    ])
-);
-
-$container->set('session', function () {
-    return new \SlimSession\Helper();
-});
+// Enregistrer les services dans le conteneur
+$container->set('view', fn() => $twig);
+$container->set(AdminMiddleware::class, fn() => new AdminMiddleware($container));
+$container->set(UserMiddleware::class, fn() => new UserMiddleware($container));
+$container->set(ResponseFactoryInterface::class, fn() => $app->getResponseFactory());
+$container->set('session', fn() => new \SlimSession\Helper());
 
 // Charger les routes
 $routes = require __DIR__ . '/../routes/web.php';
 $routes($app);
 
+// Enregistrer les contrôleurs dans le conteneur et les routes associées
+$controllers = [
+    HomeController::class,
+    CGUController::class,
+    UserAdminController::class,
+    MentionslegalesController::class,
+    contactController::class
+];
 
-$container->set(HomeController::class, function () use ($container) {
-    return new HomeController($container);
-});
-$container->get(HomeController::class)->registerRoutes($app);
+foreach ($controllers as $controller) {
+    $container->set($controller, fn() => new $controller($container));
+    $container->get($controller)->registerRoutes($app);
+}
 
-$container->set(CGUController::class, function () use ($container) {
-    return new CGUController($container);
-});
-$container->get(CGUController::class)->registerRoutes($app);
-
-$container->set(UserAdminController::class, function () use ($container) {
-    return new UserAdminController($container);
-});
-$container->get(UserAdminController::class)->registerRoutes($app);
-
-$container->set(MentionslegalesController::class, function () use ($container) {
-    return new MentionslegalesController($container);
-});
-$container->get(MentionslegalesController::class)->registerRoutes($app);
-
-$container->set(contactController::class, function () use ($container) {
-    return new contactController($container);
-});
-$container->get(contactController::class)->registerRoutes($app);
-
+// Lancer l'application
 $app->run();
