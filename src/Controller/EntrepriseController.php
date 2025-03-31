@@ -9,6 +9,7 @@ use Slim\Views\Twig;
 use App\Domain\Entreprise;
 use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
+use Doctrine\ORM\EntityManager;
 
 class EntrepriseController
 {
@@ -80,7 +81,7 @@ class EntrepriseController
         public function saveEntreprise(Entreprise $entreprise)
         {
             try {
-                $entityManager = $this->container->get('doctrine.entity_manager'); // Récupération de l'EntityManager
+                $entityManager = $this->container->get(EntityManager::class); // Récupération de l'EntityManager
         
                 // Sauvegarde de l'entreprise en base de données
                 $entityManager->persist($entreprise);
