@@ -41,16 +41,34 @@ class EntrepriseController
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
+        $entityManager = $this->container->get(EntityManager::class);
         $add = !isset($args['id']);
-        $entreprise = $add ? new Entreprise() : $this->getEntrepriseById($args['id']);
-        
+
+        if ($add) {
+            $entreprise = new Entreprise();
+        } else {
+            $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+
+            if (!$entreprise) {
+                $response->getBody()->write("Entreprise non trouvée !");
+                return $response->withStatus(404);
+            }
+        }
+
         if ($request->getMethod() === 'POST') {
             $data = $request->getParsedBody();
+
             $entreprise->setTitre($data['titre'] ?? '');
             $entreprise->setEmail($data['email'] ?? '');
-            
-            $this->saveEntreprise($entreprise);
-            
+            $entreprise->setVille($data['ville'] ?? null);
+            $entreprise->setDescription($data['description'] ?? null);
+            $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
+            $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
+            $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
+
+            $entityManager->persist($entreprise);
+            $entityManager->flush();
+
             $routeParser = RouteContext::fromRequest($request)->getRouteParser();
             $url = $routeParser->urlFor('entreprises-list');
             return $response->withHeader('Location', $url)->withStatus(302);
@@ -61,15 +79,6 @@ class EntrepriseController
             'entrepriseEntity' => $entreprise,
             'add' => $add,
         ]);
-    }
-
-    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $this->deleteEntrepriseById($args['id']);
-        
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $url = $routeParser->urlFor('entreprises-list');
-        return $response->withHeader('Location', $url)->withStatus(302);
     }
 
     private function getEntrepriseById($id): ?Entreprise
