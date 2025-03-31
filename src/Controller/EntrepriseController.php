@@ -23,21 +23,13 @@ class EntrepriseController
     public function registerRoutes($app)
     {
         $app->get('/entreprises', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list');
-        $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprises-edit');
+        $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprise-edit');
         $app->post('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise');
         $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add');
         $app->post('/entreprises/add', EntrepriseController::class . ':editEntreprise');
-        $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprises-delete');
+        $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprise-delete');
     }
 
-    public function listEntreprises(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $entreprises = []; // Remplace par une source de données appropriée
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
-            'entreprises' => $entreprises,
-        ]);
-    }
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
@@ -86,24 +78,52 @@ class EntrepriseController
         return new Entreprise();
     }
 
-    
-        public function saveEntreprise(Entreprise $entreprise)
-        {
-            try {
-                $entityManager = $this->container->get(EntityManager::class); // Récupération de l'EntityManager
-        
-                // Sauvegarde de l'entreprise en base de données
-                $entityManager->persist($entreprise);
-                $entityManager->flush();
-        
-                echo "Entreprise ajoutée avec succès !"; // Debugging
-            } catch (\Exception $e) {
-                echo "Erreur lors de l'enregistrement : " . $e->getMessage();
-                die;
-            }
-        }    
-
-    private function deleteEntrepriseById($id): void
+    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
+        $em = $this->container->get(EntityManager::class);
+        $entreprise = $em->getRepository(Entreprise::class)->find($args['id']);
+    
+        if ($entreprise) {
+            $em->remove($entreprise);
+            $em->flush();
+        }
+    
+        // Redirection vers la liste des entreprises après suppression
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('entreprises-list');
+        return $response->withHeader('Location', $url)->withStatus(302);
     }
+    
+
+    public function paginatedList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $em = $this->container->get(EntityManager::class);
+        $page = (int)($args['page'] ?? 1);
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $entreprises = $em->getRepository(Entreprise::class)->findBy([], null, $limit, $offset);
+        $totalEntreprises = $em->getRepository(Entreprise::class)->count([]);
+
+        $view = Twig::fromRequest($request);
+
+        return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
+            'entreprises' => $entreprises,
+            'currentPage' => $page,
+            'totalPages' => ceil($totalEntreprises / $limit),
+        ]);
+    }
+    public function listEntreprises(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $em = $this->container->get(EntityManager::class);
+        $entreprises = $em->getRepository(Entreprise::class)->findAll();
+
+        $view = Twig::fromRequest($request);
+
+        return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
+            'entreprises' => $entreprises,
+        ]);
+    }
+   
 }
+
