@@ -32,6 +32,9 @@ class OffreDeStage
     #[ORM\JoinColumn(name: 'entreprise_id', referencedColumnName: 'id', nullable: false)]
     private Entreprise $entreprise;
 
+    #[ORM\OneToMany(mappedBy: 'offre', targetEntity: Candidature::class, cascade: ['persist', 'remove'])]
+    private Collection $candidatures;
+
     public function __construct(
         string $titre,
         string $description,

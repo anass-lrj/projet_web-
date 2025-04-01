@@ -1,0 +1,42 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Candidature pour une offre de stage</h2>
+    <form action="{{ url_for('postuler') }}" method="POST" class="shadow p-4 rounded bg-light">
+        <div class="form-group mb-3">
+            <label for="nom" class="form-label">Nom</label>
+            <input type="text" id="nom" name="nom" class="form-control" placeholder="Entrez votre nom" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="prenom" class="form-label">Prénom</label>
+            <input type="text" id="prenom" name="prenom" class="form-control" placeholder="Entrez votre prénom" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="adresse" class="form-label">Adresse</label>
+            <input type="text" id="adresse" name="adresse" class="form-control" placeholder="Entrez votre adresse" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="Entrez votre email" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="telephone" class="form-label">Numéro de téléphone</label>
+            <input type="tel" id="telephone" name="telephone" class="form-control" placeholder="Entrez votre numéro de téléphone" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="lettre_motivation" class="form-label">Lettre de motivation</label>
+            <textarea id="lettre_motivation" name="lettre_motivation" class="form-control" rows="5" placeholder="Rédigez votre lettre de motivation ici..." required></textarea>
+        </div>
+
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Envoyer ma candidature</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

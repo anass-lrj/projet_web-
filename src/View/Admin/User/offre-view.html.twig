@@ -1,0 +1,33 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}Détails de l'Offre{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center">{{ offre.titre }}</h1>
+            </div>
+            <div class="card-body">
+                <p><strong>Description :</strong> {{ offre.description }}</p>
+                <p><strong>Date de début :</strong> {{ offre.dateDebut|date('d/m/Y') }}</p>
+                <p><strong>Date de fin :</strong> {{ offre.dateFin|date('d/m/Y') }}</p>
+                <p><strong>Rémunération :</strong> {{ offre.remuneration }} €</p>
+
+                {% if entreprise %}
+                    <h3 class="mt-4">Informations sur l'entreprise</h3>
+                    <p><strong>Nom :</strong> {{ entreprise.nom }}</p>
+                    <p><strong>Email :</strong> {{ entreprise.email }}</p>
+                    <p><strong>Ville :</strong> {{ entreprise.ville }}</p>
+                    <p><strong>Contact Téléphone :</strong> {{ entreprise.contactTelephone }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('offre-list') }}" class="btn btn-primary">Retour à la liste des offres</a>
+                <a href="{{ url_for('postuler', {'id': offre.id}) }}" class="btn btn-success">Postuler</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
