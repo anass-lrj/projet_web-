@@ -40,22 +40,22 @@ class UserAdminController
   
    }
 
-   public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   public function edit(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
-       $entityManager = $this->container->get(EntityManager::class);
+       $add = true;
+       $em = $this->container->get(EntityManager::class);
        $session = $this->container->get('session');
        $currentUser = $session->get('user'); 
    
-       // 🔒 Vérification du rôle
        if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
-           $response->getBody()->write("Accès refusé.");
-           return $response->withStatus(403);
+           $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+           $url = $routeParser->urlFor('login');
+           return $response->withHeader('Location', $url)->withStatus(302);
        }
    
-       $add = !isset($args['id']);
-   
-       if ($add) {
-           $entreprise = new Entreprise();
+       if (isset($args['idUser'])) {
+           $add = false;
+           $user = $em->getRepository(User::class)->find($args['idUser']);
        } else {
            $user = new User('', '', new \DateTime(), '', '', '');
        }
@@ -71,18 +71,12 @@ class UserAdminController
                : null;
    
            // Vérification des permissions
-<<<<<<< HEAD
-           if ($currentUser->getRole() === 'pilote' && $role === 'admin') {
-               return $response->withStatus(403)->write("Un pilote ne peut pas créer un compte admin.");
-           }
-   
-=======
            if ($currentUser->getRole() === 'pilote' && in_array($role, ['admin', 'pilote'])) {
             $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
             return $response->withStatus(403);
         }
         
->>>>>>> a0a002468d47fe283950e6882da04d497714e778
+   
            // Association des promotions si user ou pilote
            if (in_array($role, ['user', 'pilote'])) {
                $promotionIds = $request->getParsedBody()['promotions'] ?? [];
@@ -107,42 +101,36 @@ class UserAdminController
            $em->flush();
    
            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-           $url = $routeParser->urlFor('entreprises-list');
+           $url = $routeParser->urlFor('user-edit', ['idUser' => $user->getId()]);
            return $response->withHeader('Location', $url)->withStatus(302);
        }
    
+       $promotions = $em->getRepository(Promotion::class)->findAll();
        $view = Twig::fromRequest($request);
-       return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
-           'entrepriseEntity' => $entreprise,
+   
+       return $view->render($response, 'Admin/User/user-edit.html.twig', [
+           'userEntity' => $user,
            'add' => $add,
+           'promotions' => $promotions
        ]);
    }
    
+
    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
-       $em = $this->container->get(EntityManager::class);
-       $session = $this->container->get('session');
-       $currentUser = $session->get('user');
-   
-       // 🔒 Seuls les admins et pilotes peuvent supprimer
-       if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
-           $response->getBody()->write("Accès refusé.");
-           return $response->withStatus(403);
-       }
-   
-       $entreprise = $em->getRepository(Entreprise::class)->find($args['id']);
-   
-       if ($entreprise) {
-           $em->remove($entreprise);
-           $em->flush();
-       }
-   
-       // Redirection après suppression
-       $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-       $url = $routeParser->urlFor('entreprises-list');
-       return $response->withHeader('Location', $url)->withStatus(302);
+        $em = $this->container->get(EntityManager::class);
+        $user = $em->getRepository(User::class)->find($args['idUser']);
+
+        if ($user) {
+            $em->remove($user);
+            $em->flush();
+        }
+
+        // Redirect to user list page after deletion
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('list-racine');
+        return $response->withHeader('Location', $url)->withStatus(302);
    }
-   
 
    public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
