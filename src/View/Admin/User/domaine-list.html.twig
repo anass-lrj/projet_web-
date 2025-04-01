@@ -1,0 +1,36 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center text-primary">Gestion des Domaines</h1>
+
+    <!-- Liste des domaines sous forme de cartes -->
+    <div class="row">
+        {% for domaine in domaines %}
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ domaine.nom }}</h5>
+                        <p class="card-text text-muted">ID : <strong>{{ domaine.id }}</strong></p>
+                        <a href="{{ url_for('domaine-delete', { 'id': domaine.id }) }}" class="btn btn-outline-danger btn-sm">Supprimer</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Formulaire d'ajout -->
+    <div class="card mt-4 shadow">
+        <div class="card-header bg-primary text-white">Ajouter un Domaine</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('domaine-add') }}">
+                <div class="mb-3">
+                    <label for="nom" class="form-label">Nom du domaine :</label>
+                    <input type="text" id="nom" name="nom" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Ajouter Domaine</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
