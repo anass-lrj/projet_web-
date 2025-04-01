@@ -3,6 +3,8 @@
 namespace App\Domain;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity, ORM\Table(name: 'entreprise')]
 class Entreprise
@@ -31,14 +33,40 @@ class Entreprise
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $evaluationMoyenne = null;
 
-    // ✅ Ajout de valeurs par défaut pour éviter l'erreur de constructeur
+    #[ORM\OneToMany(mappedBy: 'entreprise', targetEntity: OffreDeStage::class, cascade: ['persist', 'remove'])]
+    private Collection $offresDeStage;
+    
     public function __construct(string $titre = '', string $email = '')
     {
         $this->titre = $titre;
         $this->email = $email;
+        $this->offresDeStage = new ArrayCollection();
     }
-
-    // ✅ Ajout d'un getter pour l'ID, car Doctrine le gère automatiquement
+    
+    public function getOffresDeStage(): Collection
+    {
+        return $this->offresDeStage;
+    }
+    
+    public function addOffreDeStage(OffreDeStage $offre): self
+    {
+        if (!$this->offresDeStage->contains($offre)) {
+            $this->offresDeStage[] = $offre;
+            $offre->setEntreprise($this);
+        }
+        return $this;
+    }
+    
+    public function removeOffreDeStage(OffreDeStage $offre): self
+    {
+        if ($this->offresDeStage->removeElement($offre)) {
+            if ($offre->getEntreprise() === $this) {
+                $offre->setEntreprise(null);
+            }
+        }
+        return $this;
+    }
+    
     public function getId(): ?int
     {
         return $this->id;
