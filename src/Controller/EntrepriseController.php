@@ -11,6 +11,7 @@ use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Doctrine\ORM\EntityManager;
 use App\Middlewares\UserMiddleware;
+use App\Domain\Domaine;
 
 class EntrepriseController
 {
@@ -49,6 +50,9 @@ class EntrepriseController
             }
         }
 
+        // Récupérer tous les domaines pour le formulaire de sélection
+        $domaines = $entityManager->getRepository(Domaine::class)->findAll();
+
         if ($request->getMethod() === 'POST') {
             $data = $request->getParsedBody();
 
@@ -59,6 +63,13 @@ class EntrepriseController
             $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
             $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
             $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
+
+            // Gestion du domaine
+            $domaine = null;
+            if (!empty($data['domaine_id'])) {
+                $domaine = $entityManager->getRepository(Domaine::class)->find($data['domaine_id']);
+            }
+            $entreprise->setDomaine($domaine);
 
             $entityManager->persist($entreprise);
             $entityManager->flush();
@@ -71,9 +82,11 @@ class EntrepriseController
         $view = Twig::fromRequest($request);
         return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
             'entrepriseEntity' => $entreprise,
+            'domaines' => $domaines, // Passer les domaines à la vue
             'add' => $add,
         ]);
     }
+
 
     private function getEntrepriseById($id): ?Entreprise
     {
@@ -116,16 +129,29 @@ class EntrepriseController
         ]);
     }
     public function listEntreprises(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $em = $this->container->get(EntityManager::class);
-        $entreprises = $em->getRepository(Entreprise::class)->findAll();
+{
+    $em = $this->container->get(EntityManager::class);
+    
+    $queryParams = $request->getQueryParams();
+    $domaineId = $queryParams['domaine_id'] ?? null;
 
-        $view = Twig::fromRequest($request);
-
-        return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
-            'entreprises' => $entreprises,
-        ]);
+    $criteria = [];
+    if (!empty($domaineId)) {
+        $criteria['domaine'] = $domaineId;
     }
+
+    $entreprises = $em->getRepository(Entreprise::class)->findBy($criteria);
+
+    // Récupérer tous les domaines pour le menu déroulant
+    $domaines = $em->getRepository(Domaine::class)->findAll();
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
+        'entreprises' => $entreprises,
+        'domaines' => $domaines,
+        'selectedDomaine' => $domaineId
+    ]);
+}
 
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {

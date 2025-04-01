@@ -2,7 +2,22 @@
 
 {% block content %}
 <div class="container mt-4">
-    <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary mb-4">Ajouter une entreprise</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary">Ajouter une entreprise</a>
+
+        <!-- Formulaire de sélection du domaine -->
+        <form method="get" action="{{ url_for('entreprises-list') }}" class="d-flex">
+            <select name="domaine_id" class="form-control me-2">
+                <option value="">-- Filtrer par domaine --</option>
+                {% for domaine in domaines %}
+                    <option value="{{ domaine.id }}" {% if selectedDomaine|default('') == domaine.id|default('') %}selected{% endif %}>
+                        {{ domaine.nom }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Filtrer</button>
+        </form>
+    </div>
 
     <div class="row">
         {% for entreprise in entreprises %}
@@ -11,20 +26,23 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ entreprise.titre }}</h5>
                         <p class="card-text"><strong>Email :</strong> {{ entreprise.email }}</p>
-                        {% if entreprise.ville is defined and entreprise.ville %}
+                        {% if entreprise.ville %}
                             <p class="card-text"><strong>Ville :</strong> {{ entreprise.ville }}</p>
                         {% endif %}
-                        {% if entreprise.description is defined and entreprise.description %}
+                        {% if entreprise.description %}
                             <p class="card-text"><strong>Description :</strong> {{ entreprise.description }}</p>
                         {% endif %}
-                        {% if entreprise.contactTelephone is defined and entreprise.contactTelephone %}
+                        {% if entreprise.contactTelephone %}
                             <p class="card-text"><strong>Téléphone :</strong> {{ entreprise.contactTelephone }}</p>
                         {% endif %}
-                        {% if entreprise.nombreStagiaires is defined and entreprise.nombreStagiaires %}
+                        {% if entreprise.nombreStagiaires %}
                             <p class="card-text"><strong>Nombre de stagiaires :</strong> {{ entreprise.nombreStagiaires }}</p>
                         {% endif %}
-                        {% if entreprise.evaluationMoyenne is defined and entreprise.evaluationMoyenne %}
+                        {% if entreprise.evaluationMoyenne %}
                             <p class="card-text"><strong>Évaluation moyenne :</strong> {{ entreprise.evaluationMoyenne }}</p>
+                        {% endif %}
+                        {% if entreprise.domaine %}
+                            <p class="card-text"><strong>Domaine :</strong> {{ entreprise.domaine.nom }}</p>
                         {% endif %}
                         <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary">Modifier</a>
                         <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')">Supprimer</a>
@@ -32,6 +50,8 @@
                     </div>
                 </div>
             </div>
+        {% else %}
+            <p class="text-center">Aucune entreprise trouvée.</p>
         {% endfor %}
     </div>
 

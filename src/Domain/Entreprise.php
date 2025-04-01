@@ -12,10 +12,10 @@ class Entreprise
     #[ORM\Id, ORM\Column(type: 'integer'), ORM\GeneratedValue(strategy: 'AUTO')]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 100, nullable: false)]
+    #[ORM\Column(type: 'string', length: 100)]
     private string $titre;
 
-    #[ORM\Column(type: 'string', length: 100, unique: true, nullable: false)]
+    #[ORM\Column(type: 'string', length: 100, unique: true)]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -35,6 +35,10 @@ class Entreprise
 
     #[ORM\OneToMany(mappedBy: 'entreprise', targetEntity: OffreDeStage::class, cascade: ['persist', 'remove'])]
     private Collection $offresDeStage;
+
+    #[ORM\ManyToOne(targetEntity: Domaine::class)]
+    #[ORM\JoinColumn(name: "domaine_id", referencedColumnName: "id", nullable: true)]
+    private ?Domaine $domaine = null;
     
     public function __construct(string $titre = '', string $email = '')
     {
@@ -146,6 +150,17 @@ class Entreprise
     public function setEvaluationMoyenne(?float $evaluationMoyenne): self
     {
         $this->evaluationMoyenne = $evaluationMoyenne;
+        return $this;
+    }
+
+    public function getDomaine(): ?Domaine
+    {
+        return $this->domaine;
+    }
+
+    public function setDomaine(?Domaine $domaine): self
+    {
+        $this->domaine = $domaine;
         return $this;
     }
 }

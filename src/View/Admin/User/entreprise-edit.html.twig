@@ -45,7 +45,20 @@
                     <input type="number" step="0.01" class="form-control" id="evaluationMoyenne" name="evaluationMoyenne" value="{{ entrepriseEntity.evaluationMoyenne|default('') }}">
                 </div>
 
-                <button type="submit" class="btn btn-primary mt-3 w-100">Enregistrer</button>
+                 <div class="form-group">
+                    <label for="domaine_id">Domaine</label>
+                         <select name="domaine_id" id="domaine_id" class="form-control">
+                            <option value="">Sélectionner un domaine</option>
+                                {% for domaine in domaines %}
+                            <option value="{{ domaine.id }}" {% if entrepriseEntity.domaine and entrepriseEntity.domaine.id == domaine.id %}selected{% endif %}>
+                            {{ domaine.nom }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                </div>
+
+    <button type="submit" class="btn btn-primary mt-3 w-100">Enregistrer</button>
+    <a href="{{ url_for('entreprises-list') }}" class="btn btn-secondary mt-3 w-100">Retour</a>
             </form>
         </div>
     </div>
