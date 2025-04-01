@@ -12,7 +12,7 @@
     "doctrine/annotations": "^2.0",
     "bryanjhv/slim-session": "^4.1",
     "symfony/console": "^7.2",
-    "gabordemooij/redbean": "^5.7"
+    "doctrine/migrations": "^3.9"
   },
   "autoload": {
     "psr-4": {

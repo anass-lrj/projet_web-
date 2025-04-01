@@ -37,19 +37,9 @@ $app->add(new Session([
     'lifetime' => '1 hour'
 ]));
 
-// Vérifier que la session est bien démarrée
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Ajouter Twig après l'initialisation des sessions
 $twig = Twig::create(__DIR__ . '/../src/View', ['cache' => false, 'debug' => true]);
 $twig->addExtension(new \Twig\Extension\DebugExtension());
-$twig->getEnvironment()->addGlobal('session', $_SESSION);
 $app->add(TwigMiddleware::create($app, $twig));
 
 // Enregistrer les services dans le conteneur

@@ -4,7 +4,8 @@ use Slim\App;
 use Slim\Views\Twig;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use App\Controller\AuthController;
+use Doctrine\ORM\EntityManager;
+use App\Domain\User;
 
 return function (App $app) {
 
@@ -44,39 +45,44 @@ return function (App $app) {
         return $view->render($response, 'Mentions-légales.twig', );
     });
 
-    $app->post('/login', function ($request, $response) {
+
+    $app->get('/login', function (Request $request, Response $response, $args) {
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'login.html.twig');
+    })->setName('login');
+    
+    $app->post('/login', function ($request, $response) use ($app) {
+        $view = Twig::fromRequest($request);
+        $em = $app->getContainer()->get(EntityManager::class);
         try {
-            // Utiliser getParsedBody() pour récupérer les données POST
             $data = $request->getParsedBody();
             $email = $data['email'];
             $password = $data['password'];
+            //use doctrine to find user by email
+            $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+
+            $errors = [];
     
-            // Recherche l'utilisateur en base de données
-            $user = R::findOne('users', 'email = ?', [$email]);
-    
-            // Si l'utilisateur n'existe pas
             if ($user === null) {
-                return $response->withJson(['status' => false, 'message' => 'Utilisateur non trouvé'], 400);
+                $errors[] = 'Utilisateur non trouvé';
             }
     
-            // Vérification du mot de passe
-            if (password_verify($password, $user->password)) {
-                // Si tout est bon, on ajoute l'utilisateur à la session
-                $_SESSION['email'] = $email;
+            if (password_verify($password, $user->getPassword())) {
+                $this->container->get('session')->set('user',$user);
                 return $response->withJson(['status' => true]);
             } else {
-                return $response->withJson(['status' => false, 'message' => 'Mot de passe incorrect'], 400);
+                $errors[] = 'Mot de passe incorrect';
             }
+
+            return $view->render($response, 'login.html.twig',['errors'=> $errors]);
         } catch (Exception $e) {
-            // En cas d'erreur interne du serveur
-            error_log('Erreur : ' . $e->getMessage()); // Ajoute cette ligne pour loguer les erreurs
-            return $response->withJson(['status' => false, 'message' => 'Erreur interne du serveur'], 500);
+            error_log('Erreur : ' . $e->getMessage());
+            $errors[] = 'Erreur interne du serveur '. $e->getMessage();
+            return $view->render($response, 'login.html.twig',['errors'=> $errors]);
         }
     });
     
     
-    
-
     /*$app->post('/login', function (Request $request, Response $response, $args) use ($validCredentials) {
         $parsedBody = $request->getParsedBody();
         $email = $parsedBody['email'] ?? '';
