@@ -1,0 +1,9 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    {% if currentUser is not null %}
+        <h1>Bienvenue {{ currentUser.prenom }}</h1>
+    {% else %}
+        <h1>Veuillez vous connecter</h1>
+    {% endif %}
+{% endblock %}

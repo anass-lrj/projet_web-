@@ -217,6 +217,9 @@
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                   {% if currentUser is not null %}
                       <!-- Utilisateur connecté -->
+                      <li id="DashboardContainer">
+                          <a class="dropdown-item" href="{{ url_for('dashboard') }}">Mon dashboard</a>
+                      </li>
                       <li id="logoutLinkContainer">
                           <a class="dropdown-item" href="{{ url_for('logout') }}">Se déconnecter</a>
                       </li>
