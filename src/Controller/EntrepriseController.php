@@ -35,57 +35,55 @@ class EntrepriseController
 
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $entityManager = $this->container->get(EntityManager::class);
-        $add = !isset($args['id']);
+{
+    $entityManager = $this->container->get(EntityManager::class);
+    $session = $this->container->get('session');
+    $currentUser = $session->get('user');
 
-        if ($add) {
-            $entreprise = new Entreprise();
-        } else {
-            $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-
-            if (!$entreprise) {
-                $response->getBody()->write("Entreprise non trouvée !");
-                return $response->withStatus(404);
-            }
-        }
-
-        // Récupérer tous les domaines pour le formulaire de sélection
-        $domaines = $entityManager->getRepository(Domaine::class)->findAll();
-
-        if ($request->getMethod() === 'POST') {
-            $data = $request->getParsedBody();
-
-            $entreprise->setTitre($data['titre'] ?? '');
-            $entreprise->setEmail($data['email'] ?? '');
-            $entreprise->setVille($data['ville'] ?? null);
-            $entreprise->setDescription($data['description'] ?? null);
-            $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
-            $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
-            $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
-
-            // Gestion du domaine
-            $domaine = null;
-            if (!empty($data['domaine_id'])) {
-                $domaine = $entityManager->getRepository(Domaine::class)->find($data['domaine_id']);
-            }
-            $entreprise->setDomaine($domaine);
-
-            $entityManager->persist($entreprise);
-            $entityManager->flush();
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $url = $routeParser->urlFor('entreprises-list');
-            return $response->withHeader('Location', $url)->withStatus(302);
-        }
-
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
-            'entrepriseEntity' => $entreprise,
-            'domaines' => $domaines, // Passer les domaines à la vue
-            'add' => $add,
-        ]);
+    // Vérification du rôle
+    if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé. Seuls les admins et pilotes peuvent créer ou modifier une entreprise.");
+        return $response->withStatus(403);
     }
+
+    $add = !isset($args['id']);
+
+    if ($add) {
+        $entreprise = new Entreprise();
+    } else {
+        $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+
+        if (!$entreprise) {
+            $response->getBody()->write("Entreprise non trouvée !");
+            return $response->withStatus(404);
+        }
+    }
+
+    if ($request->getMethod() === 'POST') {
+        $data = $request->getParsedBody();
+
+        $entreprise->setTitre($data['titre'] ?? '');
+        $entreprise->setEmail($data['email'] ?? '');
+        $entreprise->setVille($data['ville'] ?? null);
+        $entreprise->setDescription($data['description'] ?? null);
+        $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
+        $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
+        $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
+
+        $entityManager->persist($entreprise);
+        $entityManager->flush();
+
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('entreprises-list');
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
+        'entrepriseEntity' => $entreprise,
+        'add' => $add,
+    ]);
+}
 
 
     private function getEntrepriseById($id): ?Entreprise
@@ -138,7 +136,42 @@ class EntrepriseController
     $criteria = [];
     if (!empty($domaineId)) {
         $criteria['domaine'] = $domaineId;
+    $entityManager = $this->container->get(EntityManager::class);
+    
+    // Récupérer le terme de recherche depuis la requête
+    $searchQuery = $request->getQueryParams()['search'] ?? '';
+    
+    // Si une recherche est effectuée, filtrez les entreprises par titre
+    if ($searchQuery) {
+        $entreprises = $entityManager->getRepository(Entreprise::class)
+            ->createQueryBuilder('e')
+            ->where('e.titre LIKE :search')
+            ->setParameter('search', '%' . $searchQuery . '%')
+            ->getQuery()
+            ->getResult();
+    } else {
+        // Sinon, récupérer toutes les entreprises
+        $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
     }
+    
+    // Récupérer l'utilisateur actuel depuis la session
+    $session = $this->container->get('session');
+    $user = $session->get('user');
+    
+    // Nombre total d'entreprises pour la pagination
+    $totalEntreprises = count($entreprises);
+    
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
+        'entreprises' => $entreprises,
+        'user' => $user,  // Passer l'utilisateur à la vue
+        'searchQuery' => $searchQuery,  // Passer la requête de recherche à la vue
+        'currentPage' => 1,  // Vous pouvez ajuster la pagination ici si nécessaire
+        'totalPages' => ceil($totalEntreprises / 10),  // Calculer le nombre de pages en fonction du nombre total d'entreprises
+    ]);
+}
+
+    
 
     $entreprises = $em->getRepository(Entreprise::class)->findBy($criteria);
 
