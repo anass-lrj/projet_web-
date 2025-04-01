@@ -18,6 +18,11 @@
                     </div>
                 </div>
             </div>
+              {% if currentUser.role == 'admin' or currentUser.role == 'pilote' %}
+            <div class="mt-4">
+                <a href="{{ url_for('list-racine') }}" class="btn btn-primary">Voir la liste des utilisateurs</a>
+            </div>
+        {% endif %}
     {% else %}
         <h1>Veuillez vous connecter</h1>
     {% endif %}

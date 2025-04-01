@@ -129,61 +129,46 @@ class EntrepriseController
     public function listEntreprises(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
     $em = $this->container->get(EntityManager::class);
-    
     $queryParams = $request->getQueryParams();
+
+    $searchQuery = $queryParams['search'] ?? '';
     $domaineId = $queryParams['domaine_id'] ?? null;
 
-    $criteria = [];
+    $qb = $em->getRepository(Entreprise::class)->createQueryBuilder('e');
+
+    // Appliquer le filtrage par domaine si un domaine est sélectionné
     if (!empty($domaineId)) {
-        $criteria['domaine'] = $domaineId;
-    $entityManager = $this->container->get(EntityManager::class);
-    
-    // Récupérer le terme de recherche depuis la requête
-    $searchQuery = $request->getQueryParams()['search'] ?? '';
-    
-    // Si une recherche est effectuée, filtrez les entreprises par titre
-    if ($searchQuery) {
-        $entreprises = $entityManager->getRepository(Entreprise::class)
-            ->createQueryBuilder('e')
-            ->where('e.titre LIKE :search')
-            ->setParameter('search', '%' . $searchQuery . '%')
-            ->getQuery()
-            ->getResult();
-    } else {
-        // Sinon, récupérer toutes les entreprises
-        $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
+        $qb->andWhere('e.domaine = :domaine')
+           ->setParameter('domaine', $domaineId);
     }
-    
+
+    // Appliquer la recherche par nom si une requête est donnée
+    if (!empty($searchQuery)) {
+        $qb->andWhere('e.titre LIKE :search')
+           ->setParameter('search', '%' . $searchQuery . '%');
+    }
+
+    // Exécuter la requête
+    $entreprises = $qb->getQuery()->getResult();
+
+    // Récupérer tous les domaines pour le filtre
+    $domaines = $em->getRepository(Domaine::class)->findAll();
+
     // Récupérer l'utilisateur actuel depuis la session
     $session = $this->container->get('session');
     $user = $session->get('user');
-    
-    // Nombre total d'entreprises pour la pagination
-    $totalEntreprises = count($entreprises);
-    
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
-        'entreprises' => $entreprises,
-        'user' => $user,  // Passer l'utilisateur à la vue
-        'searchQuery' => $searchQuery,  // Passer la requête de recherche à la vue
-        'currentPage' => 1,  // Vous pouvez ajuster la pagination ici si nécessaire
-        'totalPages' => ceil($totalEntreprises / 10),  // Calculer le nombre de pages en fonction du nombre total d'entreprises
-    ]);
-}
-
-    
-
-    $entreprises = $em->getRepository(Entreprise::class)->findBy($criteria);
-
-    // Récupérer tous les domaines pour le menu déroulant
-    $domaines = $em->getRepository(Domaine::class)->findAll();
 
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
         'entreprises' => $entreprises,
         'domaines' => $domaines,
-        'selectedDomaine' => $domaineId
+        'selectedDomaine' => $domaineId,
+        'searchQuery' => $searchQuery,
+        'user' => $user,
     ]);
+
+
+    
 }
 
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
