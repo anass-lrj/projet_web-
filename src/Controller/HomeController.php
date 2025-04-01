@@ -24,8 +24,8 @@ class HomeController
    public function registerRoutes($app)
    {
        //$app->get('/login', \App\Controller\HomeController::class . ':login')->setName('login');
-       $app->get('/', \App\Controller\HomeController::class . ':home')->add(UserMiddleware::class)->add(UserMiddleware::class);
-       $app->get('/admin', \App\Controller\HomeController::class . ':home')->add(AdminMiddleware::class)->add(UserMiddleware::class);
+       $app->get('/', \App\Controller\HomeController::class . ':home')->add(UserMiddleware::class);
+       $app->get('/admin', \App\Controller\HomeController::class . ':home')->add(AdminMiddleware::class);
    }
 
 

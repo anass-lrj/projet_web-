@@ -10,7 +10,6 @@ use App\Domain\Entreprise;
 use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Doctrine\ORM\EntityManager;
-use App\Middlewares\UserMiddleware;
 
 class EntrepriseController
 {
@@ -23,13 +22,13 @@ class EntrepriseController
 
     public function registerRoutes($app)
     {
-        $app->get('/entreprises', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list')->add(UserMiddleware::class);
-        $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprise-edit')->add(UserMiddleware::class);
-        $app->post('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->add(UserMiddleware::class);
-        $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add')->add(UserMiddleware::class);
-        $app->post('/entreprises/add', EntrepriseController::class . ':editEntreprise')->add(UserMiddleware::class);
-        $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprise-delete')->add(UserMiddleware::class);
-        $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu')->add(UserMiddleware::class);
+        $app->get('/entreprises', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list');
+        $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprise-edit');
+        $app->post('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise');
+        $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add');
+        $app->post('/entreprises/add', EntrepriseController::class . ':editEntreprise');
+        $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprise-delete');
+        $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu');
     }
 
 

@@ -23,7 +23,7 @@ class MentionslegalesController
 
    public function registerRoutes($app)
    {
-       $app->get('/Mentionslegales', \App\Controller\MentionslegalesController::class . ':Mentionslegales')->add(UserMiddleware::class);
+       $app->get('/Mentionslegales', \App\Controller\MentionslegalesController::class . ':Mentionslegales');
    }
 
 

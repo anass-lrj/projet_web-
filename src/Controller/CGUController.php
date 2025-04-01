@@ -23,7 +23,7 @@ class CGUController
 
    public function registerRoutes($app)
    {
-       $app->get('/cgu', \App\Controller\CGUController::class . ':cgu')->add(UserMiddleware::class);
+       $app->get('/cgu', \App\Controller\CGUController::class . ':cgu');
    }
 
 

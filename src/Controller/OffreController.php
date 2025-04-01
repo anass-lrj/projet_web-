@@ -10,7 +10,6 @@ use App\Domain\OffreDeStage;
 use App\Domain\Entreprise;
 use Slim\Routing\RouteContext;
 use Doctrine\ORM\EntityManager;
-use App\Middlewares\UserMiddleware;
 
 class OffreController
 {
@@ -23,12 +22,13 @@ class OffreController
 
     public function registerRoutes($app)
     {
-        $app->get('/offres', OffreController::class . ':listOffres')->setName('offre-list')->add(UserMiddleware::class);
-        $app->get('/offres/edit/{id}', OffreController::class . ':editOffre')->setName('offre-edit')->add(UserMiddleware::class);
-        $app->post('/offres/edit/{id}', OffreController::class . ':editOffre')->add(UserMiddleware::class);
-        $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add')->add(UserMiddleware::class);
-        $app->post('/offres/add', OffreController::class . ':editOffre')->add(UserMiddleware::class);
-        $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete')->add(UserMiddleware::class);
+        $app->get('/offres', OffreController::class . ':listOffres')->setName('offre-list');
+        $app->get('/offres/edit/{id}', OffreController::class . ':editOffre')->setName('offre-edit');
+        $app->post('/offres/edit/{id}', OffreController::class . ':editOffre');
+        $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add');
+        $app->post('/offres/add', OffreController::class . ':editOffre');
+        $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete');
+        $app->get('/offres/aperçu/{id}', OffreController::class . ':aperçuOffre')->setName('offre-aperçu');
     }
 
     public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -126,4 +126,32 @@ class OffreController
             'totalPages' => ceil($totalOffres / $limit),
         ]);
     }
+    public function aperçuOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $entityManager = $this->container->get(EntityManager::class);
+
+    // Vérifier si l'ID est fourni
+    if (!isset($args['id'])) {
+        $response->getBody()->write("ID de l'offre non fourni !");
+        return $response->withStatus(400);
+    }
+
+    // Récupérer l'offre de stage depuis la base de données
+    $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
+
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Récupérer l'entreprise associée à l'offre
+    $entreprise = $offre->getEntreprise();
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-view.html.twig', [
+        'offre' => $offre,
+        'entreprise' => $entreprise
+    ]);
+}
+
 }
