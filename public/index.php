@@ -16,6 +16,8 @@ use App\Controller\MentionslegalesController;
 use App\Controller\Admin\UserAdminController;
 use App\Controller\contactController;
 use App\Controller\EntrepriseController;
+use App\Controller\OffreController;
+
 
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -93,5 +95,10 @@ $container->set(EntrepriseController::class, function () use ($container) {
     return new EntrepriseController($container);
 });
 $container->get(EntrepriseController::class)->registerRoutes($app);
+
+$container->set(OffreController::class, function () use ($container) {
+    return new OffreController($container);
+});
+$container->get(OffreController::class)->registerRoutes($app);
 
 $app->run();
