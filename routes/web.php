@@ -62,14 +62,19 @@ return function (App $app) {
             $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
 
             $errors = [];
+            
     
             if ($user === null) {
                 $errors[] = 'Utilisateur non trouvé';
+                return $view->render($response, 'login.html.twig',['errors'=> $errors]);
             }
+            
     
-            if (password_verify($password, $user->getPassword())) {
-                $this->container->get('session')->set('user',$user);
-                return $response->withJson(['status' => true]);
+            if (password_verify($password, $user->getMotDePasse())) {
+                $app->getContainer()->get('session')->set('user', $user);
+                return $response
+                    ->withHeader('Location', '/')
+                    ->withStatus(302);
             } else {
                 $errors[] = 'Mot de passe incorrect';
             }
