@@ -19,7 +19,8 @@ use Slim\Middleware\Session;
 use App\Controller\EntrepriseController;
 use App\Controller\OffreController;
 use App\Controller\AuthController;
-
+use App\Controller\LogoutController;
+use App\Controller\DashboardController;
 
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -64,6 +65,8 @@ $controllers = [
     EntrepriseController::class,
     OffreController::class,
     AuthController::class,
+    LogoutController::class,
+    DashboardController::class,
 ];
 
 foreach ($controllers as $controller) {

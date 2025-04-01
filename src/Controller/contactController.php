@@ -23,7 +23,7 @@ class contactController
 
    public function registerRoutes($app)
    {
-       $app->get('/contact', \App\Controller\contactController::class . ':contact');
+       $app->get('/contact', \App\Controller\contactController::class . ':contact')->add(UserMiddleware::class);
    }
 
 

@@ -20,18 +20,20 @@
      }
  
      public function process(Request $request, RequestHandler $handler): Response
-     {   
- 
-         if($this->container->get('session')->get('user')->getRole() != 'admin'){
-             $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-             $url = $routeParser->urlFor('login');
-             $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
-             return $response
-                 ->withHeader('Location', $url)
-                 ->withStatus(302);
-         }
- 
-         $response = $handler->handle($request);
-         return $response;
-     }
+{
+    $session = $this->container->get('session');
+    $user = $session->get('user');
+
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('login');
+        return $this->container->get(ResponseFactoryInterface::class)->createResponse()
+            ->withHeader('Location', $url)
+            ->withStatus(302);
+    }
+    
+
+    return $handler->handle($request);
+}
+
  }

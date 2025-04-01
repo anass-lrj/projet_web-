@@ -30,6 +30,8 @@ class Promotion
         $this->nom = $nom;
         $this->pilote = $pilote;
         $this->etudiants = new ArrayCollection();
+        $this->users = new ArrayCollection();
+
     }
 
     public function getId(): int { return $this->id; }
@@ -38,5 +40,10 @@ class Promotion
     public function getPilote(): ?Pilote { return $this->pilote; }
     public function setPilote(?Pilote $pilote): void { $this->pilote = $pilote; }
     public function getEtudiants(): Collection { return $this->etudiants; }
+
+    public function getUsers(): Collection {
+        return $this->users;
+    }
+
 }
 

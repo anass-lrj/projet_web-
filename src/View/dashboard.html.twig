@@ -1,0 +1,24 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    {% if currentUser is not null %}
+        <h1>Bienvenue {{ currentUser.prenom }} {{ currentUser.nom }}</h1>
+        <p>Ici vous avez accès à votre tableau de bord, vous pouvez voir l'ensemble de vos informations ainsi que les offres auxquelles vous avez postuler </p>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Vos Informations
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nom :</strong> {{ currentUser.nom }}</p>
+                        <p><strong>Prénom :</strong> {{ currentUser.prenom }}</p>
+                        <p><strong>Email :</strong> {{ currentUser.email }}</p>
+                        <p><strong>Téléphone :</strong> {{ currentUser.telephone }}</p>
+                    </div>
+                </div>
+            </div>
+    {% else %}
+        <h1>Veuillez vous connecter</h1>
+    {% endif %}
+{% endblock %}
