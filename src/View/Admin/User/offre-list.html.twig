@@ -6,6 +6,7 @@
 
     <div class="row">
         {% for offre in offres %}
+            <!-- <pre>{{dump(offre)}}</pre> -->
             <div class="col-md-4">
                 <div class="card mb-4 shadow-sm">
                     <div class="card-body">
@@ -16,7 +17,6 @@
                         <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
                         <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary">Modifier</a>
                         <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')">Supprimer</a>
-                        <a href="{{ url_for('offre-apercu', {id: offre.id}) }}" class="btn btn-primary">Aperçu</a>
                     </div>
                 </div>
             </div>
