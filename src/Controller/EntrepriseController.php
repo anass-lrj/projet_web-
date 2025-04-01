@@ -34,46 +34,56 @@ class EntrepriseController
 
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $entityManager = $this->container->get(EntityManager::class);
-        $add = !isset($args['id']);
+{
+    $entityManager = $this->container->get(EntityManager::class);
+    $session = $this->container->get('session');
+    $currentUser = $session->get('user');
 
-        if ($add) {
-            $entreprise = new Entreprise();
-        } else {
-            $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-
-            if (!$entreprise) {
-                $response->getBody()->write("Entreprise non trouvée !");
-                return $response->withStatus(404);
-            }
-        }
-
-        if ($request->getMethod() === 'POST') {
-            $data = $request->getParsedBody();
-
-            $entreprise->setTitre($data['titre'] ?? '');
-            $entreprise->setEmail($data['email'] ?? '');
-            $entreprise->setVille($data['ville'] ?? null);
-            $entreprise->setDescription($data['description'] ?? null);
-            $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
-            $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
-            $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
-
-            $entityManager->persist($entreprise);
-            $entityManager->flush();
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $url = $routeParser->urlFor('entreprises-list');
-            return $response->withHeader('Location', $url)->withStatus(302);
-        }
-
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
-            'entrepriseEntity' => $entreprise,
-            'add' => $add,
-        ]);
+    // Vérification du rôle
+    if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé. Seuls les admins et pilotes peuvent créer ou modifier une entreprise.");
+        return $response->withStatus(403);
     }
+
+    $add = !isset($args['id']);
+
+    if ($add) {
+        $entreprise = new Entreprise();
+    } else {
+        $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+
+        if (!$entreprise) {
+            $response->getBody()->write("Entreprise non trouvée !");
+            return $response->withStatus(404);
+        }
+    }
+
+    if ($request->getMethod() === 'POST') {
+        $data = $request->getParsedBody();
+
+        $entreprise->setTitre($data['titre'] ?? '');
+        $entreprise->setEmail($data['email'] ?? '');
+        $entreprise->setVille($data['ville'] ?? null);
+        $entreprise->setDescription($data['description'] ?? null);
+        $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
+        $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
+        $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
+
+        $entityManager->persist($entreprise);
+        $entityManager->flush();
+
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('entreprises-list');
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
+        'entrepriseEntity' => $entreprise,
+        'add' => $add,
+    ]);
+}
+
 
     private function getEntrepriseById($id): ?Entreprise
     {
@@ -119,13 +129,18 @@ class EntrepriseController
     {
         $em = $this->container->get(EntityManager::class);
         $entreprises = $em->getRepository(Entreprise::class)->findAll();
-
+    
+        // Récupérer l'utilisateur actuel depuis la session
+        $session = $this->container->get('session');
+        $user = $session->get('user');
+    
         $view = Twig::fromRequest($request);
-
         return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
             'entreprises' => $entreprises,
+            'user' => $user,  // Passer l'utilisateur à la vue
         ]);
     }
+    
 
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {

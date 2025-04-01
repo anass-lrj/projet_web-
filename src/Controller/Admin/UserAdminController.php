@@ -40,103 +40,82 @@ class UserAdminController
   
    }
 
-   public function edit(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
-       $add = true;
-       $em = $this->container->get(EntityManager::class);
+       $entityManager = $this->container->get(EntityManager::class);
        $session = $this->container->get('session');
        $currentUser = $session->get('user'); 
    
+       // 🔒 Vérification du rôle
        if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
-           $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-           $url = $routeParser->urlFor('login');
-           return $response->withHeader('Location', $url)->withStatus(302);
+           $response->getBody()->write("Accès refusé.");
+           return $response->withStatus(403);
        }
    
-       if (isset($args['idUser'])) {
-           $add = false;
-           $user = $em->getRepository(User::class)->find($args['idUser']);
+       $add = !isset($args['id']);
+   
+       if ($add) {
+           $entreprise = new Entreprise();
        } else {
-           $user = new User('', '', new \DateTime(), '', '', '');
+           $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+   
+           if (!$entreprise) {
+               $response->getBody()->write("Entreprise non trouvée !");
+               return $response->withStatus(404);
+           }
        }
    
-       if ($request->getMethod() == 'POST') {
-           $prenom = $request->getParsedBody()['prenom'];
-           $nom = $request->getParsedBody()['nom'];
-           $email = $request->getParsedBody()['email'];
-           $motDePasse = $request->getParsedBody()['motDePasse'] ?? null;
-           $role = $request->getParsedBody()['role'];
-           $dateNaissance = isset($request->getParsedBody()['dateNaissance']) 
-               ? \DateTime::createFromFormat('Y-m-d', $request->getParsedBody()['dateNaissance']) 
-               : null;
+       if ($request->getMethod() === 'POST') {
+           $data = $request->getParsedBody();
    
-           // Vérification des permissions
-<<<<<<< HEAD
-           if ($currentUser->getRole() === 'pilote' && $role === 'admin') {
-               return $response->withStatus(403)->write("Un pilote ne peut pas créer un compte admin.");
-           }
+           $entreprise->setTitre($data['titre'] ?? '');
+           $entreprise->setEmail($data['email'] ?? '');
+           $entreprise->setVille($data['ville'] ?? null);
+           $entreprise->setDescription($data['description'] ?? null);
+           $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
+           $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
+           $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
    
-=======
-           if ($currentUser->getRole() === 'pilote' && in_array($role, ['admin', 'pilote'])) {
-            $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
-            return $response->withStatus(403);
-        }
-        
->>>>>>> a0a002468d47fe283950e6882da04d497714e778
-           // Association des promotions si user ou pilote
-           if (in_array($role, ['user', 'pilote'])) {
-               $promotionIds = $request->getParsedBody()['promotions'] ?? [];
-               $promotions = $em->getRepository(Promotion::class)->findBy(['id' => $promotionIds]);
-               foreach ($promotions as $promotion) {
-                   $user->addPromotion($promotion);
-               }
-           }
-   
-           $user->setPrenom($prenom);
-           $user->setNom($nom);
-           $user->setEmail($email);
-           if (!empty($motDePasse)) {
-               $user->setMotDePasse($motDePasse);
-           }
-           $user->setRole($role);
-           if ($dateNaissance !== null) {
-               $user->setDateNaissance($dateNaissance);
-           }
-   
-           $em->persist($user);
-           $em->flush();
+           $entityManager->persist($entreprise);
+           $entityManager->flush();
    
            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-           $url = $routeParser->urlFor('user-edit', ['idUser' => $user->getId()]);
+           $url = $routeParser->urlFor('entreprises-list');
            return $response->withHeader('Location', $url)->withStatus(302);
        }
    
-       $promotions = $em->getRepository(Promotion::class)->findAll();
        $view = Twig::fromRequest($request);
-   
-       return $view->render($response, 'Admin/User/user-edit.html.twig', [
-           'userEntity' => $user,
+       return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
+           'entrepriseEntity' => $entreprise,
            'add' => $add,
-           'promotions' => $promotions
        ]);
    }
    
-
    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
-        $em = $this->container->get(EntityManager::class);
-        $user = $em->getRepository(User::class)->find($args['idUser']);
-
-        if ($user) {
-            $em->remove($user);
-            $em->flush();
-        }
-
-        // Redirect to user list page after deletion
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $url = $routeParser->urlFor('list-racine');
-        return $response->withHeader('Location', $url)->withStatus(302);
+       $em = $this->container->get(EntityManager::class);
+       $session = $this->container->get('session');
+       $currentUser = $session->get('user');
+   
+       // 🔒 Seuls les admins et pilotes peuvent supprimer
+       if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
+           $response->getBody()->write("Accès refusé.");
+           return $response->withStatus(403);
+       }
+   
+       $entreprise = $em->getRepository(Entreprise::class)->find($args['id']);
+   
+       if ($entreprise) {
+           $em->remove($entreprise);
+           $em->flush();
+       }
+   
+       // Redirection après suppression
+       $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+       $url = $routeParser->urlFor('entreprises-list');
+       return $response->withHeader('Location', $url)->withStatus(302);
    }
+   
 
    public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
