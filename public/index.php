@@ -16,6 +16,10 @@ use App\Controller\MentionslegalesController;
 use App\Controller\Admin\UserAdminController;
 use App\Controller\contactController;
 use Slim\Middleware\Session;
+use App\Controller\EntrepriseController;
+use App\Controller\OffreController;
+
+
 
 require __DIR__ . '/../vendor/autoload.php';
 ini_set('display_errors', 1);
@@ -59,7 +63,9 @@ $controllers = [
     CGUController::class,
     UserAdminController::class,
     MentionslegalesController::class,
-    contactController::class
+    contactController::class,
+    EntrepriseController::class,
+    OffreController::class,
 ];
 
 foreach ($controllers as $controller) {

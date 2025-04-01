@@ -1,0 +1,24 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}Détails de l'Entreprise{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="card shadow-lg">
+            <div class="card-header" style="background-color: #78866B; color: white;">
+                <h1 class="text-center">{{ entrepriseEntity.titre }}</h1>
+            </div>
+            <div class="card-body">
+                <p><strong>Email :</strong> {{ entrepriseEntity.email }}</p>
+                <p><strong>Ville :</strong> {{ entrepriseEntity.ville }}</p>
+                <p><strong>Description :</strong> {{ entrepriseEntity.description }}</p>
+                <p><strong>Contact Téléphone :</strong> {{ entrepriseEntity.contactTelephone }}</p>
+                <p><strong>Nombre de Stagiaires :</strong> {{ entrepriseEntity.nombreStagiaires }}</p>
+                <p><strong>Évaluation Moyenne :</strong> {{ entrepriseEntity.evaluationMoyenne }}</p>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('entreprises-list') }}" class="btn" style="background-color: #78866B; color: white;">Retour à la liste des entreprises</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

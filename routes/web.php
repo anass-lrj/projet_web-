@@ -20,7 +20,7 @@ return function (App $app) {
         return $view->render($response, 'user.twig', ['username' => 'JohnDoe']);
     });
     // Page Entreprise
-    $app->get('/entreprise', function (Request $request, Response $response, $args) {
+    $app->get('/zzzzentreprise', function (Request $request, Response $response, $args) {
         $view = Twig::fromRequest($request);
         return $view->render($response, 'entreprise.twig', );
     });

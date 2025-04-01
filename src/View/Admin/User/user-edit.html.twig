@@ -4,27 +4,48 @@
 
 {{ dump(userEntity) }}
 
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="card shadow-sm" style="width: 30rem;">
+        <div class="card-body">
+            <h5 class="card-title text-center">{{ add ? 'Ajouter un utilisateur' : 'Modifier un utilisateur' }}</h5>
+            <form method="post" action="{{ add ? url_for('user-add') : url_for('user-edit', {'idUser': userEntity.id}) }}" class="mt-3">
+                
+                <div class="form-group">
+                    <label for="nom">Nom</label>
+                    <input type="text" class="form-control" id="nom" name="nom" value="{{ userEntity.nom }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prenom">Prénom</label>
+                    <input type="text" class="form-control" id="prenom" name="prenom" value="{{ userEntity.prenom }}" required>
+                </div>
 
-<form method="post" action="{{ add ? url_for('user-add') : url_for('user-edit', {'idUser': userEntity.id}) }}" class="mt-4">
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" class="form-control" id="username" name="username" value="{{ userEntity.username }}" required>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" class="form-control" id="password" name="motDePasse" {% if add %}required{% endif %}>
+                    {% if not add %}
+                        <small class="form-text text-muted">Laissez vide pour ne pas changer le mot de passe.</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Rôle</label>
+                    <select class="form-control" id="role" name="role">
+                        <option value="admin" {% if userEntity.role == 'admin' %}selected{% endif %}>Admin</option>
+                        <option value="pilote" {% if userEntity.role == 'pilote' %}selected{% endif %}>Pilote</option>
+                        <option value="user" {% if userEntity.role == 'user' %}selected{% endif %}>User</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3 w-100">Enregistrer</button>
+            </form>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
-    </div>
-    
-    <div class="form-group">
-        <label for="role">Role</label>
-        <select class="form-control" id="role" name="role">
-            <option value="admin" {% if userEntity.role == 'admin' %}selected{% endif %}>Admin</option>
-            <option value="pilote" {% if userEntity.role == 'pilote' %}selected{% endif %}>Pilote</option>
-            <option value="user" {% if userEntity.role == 'user' %}selected{% endif %}>User</option>
-        </select>
-    </div>
-    
-    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
-</form>
+</div>
 
 {% endblock %}
