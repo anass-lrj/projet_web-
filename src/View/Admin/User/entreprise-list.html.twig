@@ -28,6 +28,7 @@
                         {% endif %}
                         <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary">Modifier</a>
                         <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')">Supprimer</a>
+                        <a href="{{ url_for('entreprise-aperçu', {id: entreprise.id}) }}" class="btn btn-primary">Aperçu</a>
                     </div>
                 </div>
             </div>

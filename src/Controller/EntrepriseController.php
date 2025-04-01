@@ -28,6 +28,7 @@ class EntrepriseController
         $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add');
         $app->post('/entreprises/add', EntrepriseController::class . ':editEntreprise');
         $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprise-delete');
+        $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu');
     }
 
 
@@ -124,6 +125,31 @@ class EntrepriseController
             'entreprises' => $entreprises,
         ]);
     }
+
+    public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $entityManager = $this->container->get(EntityManager::class);
+
+    // Vérifie si l'ID est fourni
+    if (!isset($args['id'])) {
+        $response->getBody()->write("ID d'entreprise non fourni !");
+        return $response->withStatus(400);
+    }
+
+    // Recherche de l'entreprise
+    $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+
+    if (!$entreprise) {
+        $response->getBody()->write("Entreprise non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Affichage de la vue avec les détails de l'entreprise
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
+        'entrepriseEntity' => $entreprise
+    ]);
+}
    
 }
 

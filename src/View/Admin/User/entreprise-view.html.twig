@@ -1,0 +1,16 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}Détails de l'Entreprise{% endblock %}
+
+{% block content %}
+    <h1>{{ entrepriseEntity.titre }}</h1>
+
+    <p><strong>Email :</strong> {{ entrepriseEntity.email }}</p>
+    <p><strong>Ville :</strong> {{ entrepriseEntity.ville }}</p>
+    <p><strong>Description :</strong> {{ entrepriseEntity.description }}</p>
+    <p><strong>Contact Téléphone :</strong> {{ entrepriseEntity.contactTelephone }}</p>
+    <p><strong>Nombre de Stagiaires :</strong> {{ entrepriseEntity.nombreStagiaires }}</p>
+    <p><strong>Évaluation Moyenne :</strong> {{ entrepriseEntity.evaluationMoyenne }}</p>
+
+    
+{% endblock %}
