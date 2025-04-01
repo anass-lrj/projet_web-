@@ -2,26 +2,22 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Formulaire de recherche -->
-    <form method="GET" action="{{ url_for('entreprises-list') }}" class="mb-4">
-        <div class="form-group">
-            <label for="search">Rechercher une entreprise par titre</label>
-            <input type="text" name="search" id="search" class="form-control" value="{{ searchQuery }}">
-        </div>
-        <button type="submit" class="btn btn-primary">Rechercher</button>
-    </form>
 
-    <!-- Formulaire de sélection du domaine -->
-    <form method="get" action="{{ url_for('entreprises-list') }}" class="d-flex mb-4">
+    <!-- Formulaire de recherche et de filtrage -->
+    <form method="GET" action="{{ url_for('entreprises-list') }}" class="d-flex mb-4">
+        <input type="text" name="search" id="search" class="form-control me-2" 
+               placeholder="Rechercher une entreprise" value="{{ searchQuery }}">
+        
         <select name="domaine_id" class="form-control me-2">
-            <option value="">-- Filtrer par domaine --</option>
+            <option value="">-- Tous les domaines --</option>
             {% for domaine in domaines %}
                 <option value="{{ domaine.id }}" {% if selectedDomaine|default('') == domaine.id|default('') %}selected{% endif %}>
                     {{ domaine.nom }}
                 </option>
             {% endfor %}
         </select>
-        <button type="submit" class="btn btn-secondary">Filtrer</button>
+        
+        <button type="submit" class="btn btn-secondary">Rechercher</button>
     </form>
 
     {% if user.role == 'admin' or user.role == 'pilote' %}
@@ -77,5 +73,6 @@
             <a href="{{ url_for('entreprise-paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
         {% endif %}
     </div>
+
 </div>
 {% endblock %}

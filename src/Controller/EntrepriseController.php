@@ -40,7 +40,7 @@ class EntrepriseController
     $session = $this->container->get('session');
     $currentUser = $session->get('user');
 
-    // Vérification du rôle
+    // Vérification des permissions
     if (!$currentUser || !in_array($currentUser->getRole(), ['admin', 'pilote'])) {
         $response->getBody()->write("Accès refusé. Seuls les admins et pilotes peuvent créer ou modifier une entreprise.");
         return $response->withStatus(403);
@@ -70,6 +70,14 @@ class EntrepriseController
         $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
         $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
 
+        // Gestion du domaine
+        if (!empty($data['domaine_id'])) {
+            $domaine = $entityManager->getRepository(Domaine::class)->find($data['domaine_id']);
+            $entreprise->setDomaine($domaine);
+        } else {
+            $entreprise->setDomaine(null);
+        }
+
         $entityManager->persist($entreprise);
         $entityManager->flush();
 
@@ -78,10 +86,14 @@ class EntrepriseController
         return $response->withHeader('Location', $url)->withStatus(302);
     }
 
+    // 🔥 Correction : Récupération des domaines pour les afficher dans le select
+    $domaines = $entityManager->getRepository(Domaine::class)->findAll();
+
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
         'entrepriseEntity' => $entreprise,
         'add' => $add,
+        'domaines' => $domaines, // 🔥 On passe les domaines à la vue !
     ]);
 }
 
