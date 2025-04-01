@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManager;
 use App\Domain\User;
 use Exception;
 use Psr\Container\ContainerInterface;
+use App\Middlewares\UserMiddleware;
 
 class DashboardController
 {
@@ -31,6 +32,6 @@ class DashboardController
 
     public function registerRoutes($app)
     {
-        $app->get('/dashboard', [$this, 'dashboard'])->setName('dashboard');
+        $app->get('/dashboard', [$this, 'dashboard'])->setName('dashboard')->add(UserMiddleware::class);
     }
 }

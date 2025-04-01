@@ -10,6 +10,7 @@ use App\Domain\OffreDeStage;
 use App\Domain\Entreprise;
 use Slim\Routing\RouteContext;
 use Doctrine\ORM\EntityManager;
+use App\Middlewares\UserMiddleware;
 
 class OffreController
 {
@@ -22,12 +23,12 @@ class OffreController
 
     public function registerRoutes($app)
     {
-        $app->get('/offres', OffreController::class . ':listOffres')->setName('offre-list');
-        $app->get('/offres/edit/{id}', OffreController::class . ':editOffre')->setName('offre-edit');
-        $app->post('/offres/edit/{id}', OffreController::class . ':editOffre');
-        $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add');
-        $app->post('/offres/add', OffreController::class . ':editOffre');
-        $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete');
+        $app->get('/offres', OffreController::class . ':listOffres')->setName('offre-list')->add(UserMiddleware::class);
+        $app->get('/offres/edit/{id}', OffreController::class . ':editOffre')->setName('offre-edit')->add(UserMiddleware::class);
+        $app->post('/offres/edit/{id}', OffreController::class . ':editOffre')->add(UserMiddleware::class);
+        $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add')->add(UserMiddleware::class);
+        $app->post('/offres/add', OffreController::class . ':editOffre')->add(UserMiddleware::class);
+        $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete')->add(UserMiddleware::class);
     }
 
     public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
