@@ -60,6 +60,12 @@ class UserAdminController
            $user = new User('', '', new \DateTime(), '', '', '');
        }
    
+       // Vérification que le pilote ne peut pas modifier les comptes admin ou pilote
+       if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
+           $response->getBody()->write("Un pilote ne peut pas modifier un compte admin ou pilote.");
+           return $response->withStatus(403); // Forbidden
+       }
+   
        if ($request->getMethod() == 'POST') {
            $prenom = $request->getParsedBody()['prenom'];
            $nom = $request->getParsedBody()['nom'];
@@ -70,12 +76,11 @@ class UserAdminController
                ? \DateTime::createFromFormat('Y-m-d', $request->getParsedBody()['dateNaissance']) 
                : null;
    
-           // Vérification des permissions
+           // Vérification des permissions lors de la modification
            if ($currentUser->getRole() === 'pilote' && in_array($role, ['admin', 'pilote'])) {
-            $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
-            return $response->withStatus(403);
-        }
-        
+               $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
+               return $response->withStatus(403);
+           }
    
            // Association des promotions si user ou pilote
            if (in_array($role, ['user', 'pilote'])) {
@@ -100,8 +105,9 @@ class UserAdminController
            $em->persist($user);
            $em->flush();
    
+           // Redirection vers la liste des utilisateurs après l'enregistrement
            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-           $url = $routeParser->urlFor('user-edit', ['idUser' => $user->getId()]);
+           $url = $routeParser->urlFor('list-racine');  // redirection vers la liste des utilisateurs
            return $response->withHeader('Location', $url)->withStatus(302);
        }
    
@@ -116,21 +122,37 @@ class UserAdminController
    }
    
 
-   public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-   {
-        $em = $this->container->get(EntityManager::class);
-        $user = $em->getRepository(User::class)->find($args['idUser']);
 
-        if ($user) {
-            $em->remove($user);
-            $em->flush();
-        }
+public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $session = $this->container->get('session');
+    $currentUser = $session->get('user');
+    $user = $em->getRepository(User::class)->find($args['idUser']);
 
-        // Redirect to user list page after deletion
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $url = $routeParser->urlFor('list-racine');
-        return $response->withHeader('Location', $url)->withStatus(302);
-   }
+    // Vérification des permissions de suppression
+    if (!$user) {
+        $response->getBody()->write("Utilisateur non trouvé !");
+        return $response->withStatus(404);
+    }
+
+    // Un pilote ne peut pas supprimer un compte admin ou pilote
+    if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Un pilote ne peut pas supprimer un compte admin ou pilote.");
+        return $response->withStatus(403); // Forbidden
+    }
+
+    if ($user) {
+        $em->remove($user);
+        $em->flush();
+    }
+
+    // Redirection après suppression
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('list-racine');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
+
 
    public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
