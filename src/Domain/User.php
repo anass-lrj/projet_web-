@@ -2,38 +2,46 @@
 
 namespace App\Domain;
 
-use Doctrine\ORM\Mapping\Column;
-use Doctrine\ORM\Mapping\Entity;
-use Doctrine\ORM\Mapping\GeneratedValue;
-use Doctrine\ORM\Mapping\Id;
-use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\Domain\Etudiant;
 
-#[Entity, Table(name: 'users')]
-final class User
+#[ORM\Entity]
+#[ORM\Table(name: 'users')]
+class User
 {
-    #[Id, Column(type: 'integer'), GeneratedValue(strategy: 'AUTO')]
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private int $id;
 
-    #[Column(type: 'string', length: 50, nullable: false)]
+    #[ORM\Column(type: 'string', length: 50, nullable: false)]
     private string $prenom;
 
-    #[Column(type: 'string', length: 50, nullable: false)]
+    #[ORM\Column(type: 'string', length: 50, nullable: false)]
     private string $nom;
 
-    #[Column(type: 'date', nullable: false)]
+    #[ORM\Column(type: 'date', nullable: false)]
     private \DateTime $dateNaissance;
 
-    #[Column(type: 'string', unique: true, nullable: false)]
+    #[ORM\Column(type: 'string', unique: true, nullable: false)]
     private string $email;
 
-    #[Column(type: 'string', nullable: false)]
+    #[ORM\Column(type: 'string', nullable: false)]
     private string $motDePasse;
 
-    #[Column(name: 'date_creation', type: 'datetimetz_immutable', nullable: false)]
+    #[ORM\Column(name: 'date_creation', type: 'datetimetz_immutable', nullable: false)]
     private \DateTimeImmutable $dateCreation;
 
-    #[Column(type: 'string', length: 20, nullable: false)]
+    #[ORM\Column(type: 'string', length: 20, nullable: false)]
     private string $role;
+
+    #[ORM\OneToOne(mappedBy: "utilisateur", targetEntity: Etudiant::class)]
+    private ?Etudiant $etudiant = null;
+
+    #[ORM\OneToOne(mappedBy: "utilisateur", targetEntity: Pilote::class)]
+    private ?Pilote $pilote = null;
 
     public function __construct(string $prenom, string $nom, \DateTime $dateNaissance, string $email, string $motDePasse, string $role)
     {
@@ -46,68 +54,19 @@ final class User
         $this->role = $role;
     }
 
-    public function getId(): int 
-    { 
-        return $this->id; 
-    }
-
-    public function getPrenom(): string 
-    { 
-        return $this->prenom; 
-    }
-    public function setPrenom(string $prenom): self 
-    { 
-        $this->prenom = $prenom; 
-        return $this;
-    }
-    public function getNom(): string 
-    { 
-        return $this->nom; 
-    }
-    public function setNom(string $nom): void 
-    { 
-        $this->nom = $nom; 
-    }
-
-    public function getDateNaissance(): \DateTime 
-    { 
-        return $this->dateNaissance; 
-    }
-    public function setDateNaissance(\DateTime $dateNaissance): void 
-    { 
-        $this->dateNaissance = $dateNaissance; 
-    }
-
-    public function getEmail(): string 
-    { 
-        return $this->email; 
-    }
-    public function setEmail(string $email): void 
-    { 
-        $this->email = $email; 
-    }
-
-    public function getMotDePasse(): string 
-    { 
-        return $this->motDePasse; 
-    }
-    public function setMotDePasse(string $motDePasse): void 
-    { 
-        $this->motDePasse = password_hash($motDePasse, PASSWORD_DEFAULT); 
-    }
-
-    public function getDateCreation(): \DateTimeImmutable 
-    { 
-        return $this->dateCreation; 
-    }
-
-    public function getRole(): string 
-    { 
-        return $this->role; 
-    }
-
-    public function setRole(string $role): void 
-    { 
-        $this->role = $role; 
-    }
+    public function getId(): int { return $this->id; }
+    public function getPrenom(): string { return $this->prenom; }
+    public function setPrenom(string $prenom): self { $this->prenom = $prenom; return $this; }
+    public function getNom(): string { return $this->nom; }
+    public function setNom(string $nom): void { $this->nom = $nom; }
+    public function getDateNaissance(): \DateTime { return $this->dateNaissance; }
+    public function setDateNaissance(\DateTime $dateNaissance): void { $this->dateNaissance = $dateNaissance; }
+    public function getEmail(): string { return $this->email; }
+    public function setEmail(string $email): void { $this->email = $email; }
+    public function getMotDePasse(): string { return $this->motDePasse; }
+    public function setMotDePasse(string $motDePasse): void { $this->motDePasse = password_hash($motDePasse, PASSWORD_DEFAULT); }
+    public function getDateCreation(): \DateTimeImmutable { return $this->dateCreation; }
+    public function getRole(): string { return $this->role; }
+    public function setRole(string $role): void { $this->role = $role; }
 }
+
