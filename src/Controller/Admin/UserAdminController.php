@@ -57,27 +57,54 @@ class UserAdminController
        if ($add) {
            $entreprise = new Entreprise();
        } else {
-           $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-   
-           if (!$entreprise) {
-               $response->getBody()->write("Entreprise non trouvée !");
-               return $response->withStatus(404);
-           }
+           $user = new User('', '', new \DateTime(), '', '', '');
        }
    
-       if ($request->getMethod() === 'POST') {
-           $data = $request->getParsedBody();
+       if ($request->getMethod() == 'POST') {
+           $prenom = $request->getParsedBody()['prenom'];
+           $nom = $request->getParsedBody()['nom'];
+           $email = $request->getParsedBody()['email'];
+           $motDePasse = $request->getParsedBody()['motDePasse'] ?? null;
+           $role = $request->getParsedBody()['role'];
+           $dateNaissance = isset($request->getParsedBody()['dateNaissance']) 
+               ? \DateTime::createFromFormat('Y-m-d', $request->getParsedBody()['dateNaissance']) 
+               : null;
    
-           $entreprise->setTitre($data['titre'] ?? '');
-           $entreprise->setEmail($data['email'] ?? '');
-           $entreprise->setVille($data['ville'] ?? null);
-           $entreprise->setDescription($data['description'] ?? null);
-           $entreprise->setContactTelephone($data['contactTelephone'] ?? null);
-           $entreprise->setNombreStagiaires(isset($data['nombreStagiaires']) ? (int) $data['nombreStagiaires'] : null);
-           $entreprise->setEvaluationMoyenne(isset($data['evaluationMoyenne']) ? (float) $data['evaluationMoyenne'] : null);
+           // Vérification des permissions
+<<<<<<< HEAD
+           if ($currentUser->getRole() === 'pilote' && $role === 'admin') {
+               return $response->withStatus(403)->write("Un pilote ne peut pas créer un compte admin.");
+           }
    
-           $entityManager->persist($entreprise);
-           $entityManager->flush();
+=======
+           if ($currentUser->getRole() === 'pilote' && in_array($role, ['admin', 'pilote'])) {
+            $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
+            return $response->withStatus(403);
+        }
+        
+>>>>>>> a0a002468d47fe283950e6882da04d497714e778
+           // Association des promotions si user ou pilote
+           if (in_array($role, ['user', 'pilote'])) {
+               $promotionIds = $request->getParsedBody()['promotions'] ?? [];
+               $promotions = $em->getRepository(Promotion::class)->findBy(['id' => $promotionIds]);
+               foreach ($promotions as $promotion) {
+                   $user->addPromotion($promotion);
+               }
+           }
+   
+           $user->setPrenom($prenom);
+           $user->setNom($nom);
+           $user->setEmail($email);
+           if (!empty($motDePasse)) {
+               $user->setMotDePasse($motDePasse);
+           }
+           $user->setRole($role);
+           if ($dateNaissance !== null) {
+               $user->setDateNaissance($dateNaissance);
+           }
+   
+           $em->persist($user);
+           $em->flush();
    
            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
            $url = $routeParser->urlFor('entreprises-list');
