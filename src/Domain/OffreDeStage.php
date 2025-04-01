@@ -28,7 +28,7 @@ class OffreDeStage
     #[ORM\Column(name: 'date_creation', type: 'datetimetz_immutable', nullable: false)]
     private \DateTimeImmutable $dateCreation;
 
-    #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'offresDeStage')]
+    #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'offresDeStage', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'entreprise_id', referencedColumnName: 'id', nullable: false)]
     private Entreprise $entreprise;
 

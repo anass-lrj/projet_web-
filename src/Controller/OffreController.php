@@ -67,8 +67,8 @@ class OffreController
             $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
             $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
 
-            if (!empty($data['entreprise_id'])) {
-                $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise_id']);
+            if (!empty($data['entreprise'])) {
+                $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
                 if ($entreprise) {
                     $offre->setEntreprise($entreprise);
                 }
@@ -86,7 +86,7 @@ class OffreController
 
         $view = Twig::fromRequest($request);
         return $view->render($response, 'Admin/User/offre-edit.html.twig', [
-            'offre' => $offre,
+            'offreEntity' => $offre,
             'add' => $add,
             'entreprises' => $entreprises,
         ]);
