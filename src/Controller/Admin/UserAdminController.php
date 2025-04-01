@@ -71,10 +71,18 @@ class UserAdminController
                : null;
    
            // Vérification des permissions
+<<<<<<< HEAD
            if ($currentUser->getRole() === 'pilote' && $role === 'admin') {
                return $response->withStatus(403)->write("Un pilote ne peut pas créer un compte admin.");
            }
    
+=======
+           if ($currentUser->getRole() === 'pilote' && in_array($role, ['admin', 'pilote'])) {
+            $response->getBody()->write("Un pilote ne peut pas créer un compte admin ou un autre pilote.");
+            return $response->withStatus(403);
+        }
+        
+>>>>>>> a0a002468d47fe283950e6882da04d497714e778
            // Association des promotions si user ou pilote
            if (in_array($role, ['user', 'pilote'])) {
                $promotionIds = $request->getParsedBody()['promotions'] ?? [];
