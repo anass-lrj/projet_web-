@@ -43,8 +43,14 @@ class User
     #[ORM\OneToOne(mappedBy: "utilisateur", targetEntity: Pilote::class)]
     private ?Pilote $pilote = null;
 
+    #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: "users")]
+    #[ORM\JoinTable(name: "user_promotion")]
+    private Collection $promotions;
+
     public function __construct(string $prenom, string $nom, \DateTime $dateNaissance, string $email, string $motDePasse, string $role)
     {
+        $this->promotions = new ArrayCollection();
+
         $this->prenom = $prenom;
         $this->nom = $nom;
         $this->dateNaissance = $dateNaissance;
@@ -68,5 +74,21 @@ class User
     public function getDateCreation(): \DateTimeImmutable { return $this->dateCreation; }
     public function getRole(): string { return $this->role; }
     public function setRole(string $role): void { $this->role = $role; }
+   
+   
+    public function getPromotions(): Collection {
+        return $this->promotions;
+    }
+    
+    public function addPromotion(Promotion $promotion): void {
+        if (!$this->promotions->contains($promotion)) {
+            $this->promotions->add($promotion);
+        }
+    }
+    
+    public function removePromotion(Promotion $promotion): void {
+        $this->promotions->removeElement($promotion);
+    }
+
 }
 
