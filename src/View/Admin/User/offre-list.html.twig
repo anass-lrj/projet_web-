@@ -1,6 +1,35 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('offre-add') }}" class="btn btn-primary mb-4">Ajouter une offre</a>
 
-<h1>ttttt<h1/>
+    <div class="row">
+        {% for offre in offres %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ offre.titre }}</h5>
+                        <p class="card-text"><strong>Entreprise :</strong> {{ offre.entreprise.titre }}</p>
+                        <p class="card-text"><strong>Ville :</strong> {{ offre.ville|default('Non spécifiée') }}</p>
+                        <p class="card-text"><strong>Durée :</strong> {{ offre.duree }} mois</p>
+                        <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
+                        <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary">Modifier</a>
+                        <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')">Supprimer</a>
+                        <a href="{{ url_for('offre-apercu', {id: offre.id}) }}" class="btn btn-primary">Aperçu</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        {% if currentPage > 1 %}
+            <a href="{{ url_for('offre-paginatedList', {page: currentPage - 1}) }}" class="btn btn-link">Précédent</a>
+        {% endif %}
+        {% if currentPage < totalPages %}
+            <a href="{{ url_for('offre-paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

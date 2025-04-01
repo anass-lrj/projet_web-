@@ -46,12 +46,12 @@ class OffreController
     {
         $entityManager = $this->container->get(EntityManager::class);
         $add = !isset($args['id']);
+        $offre = null;
 
         if ($add) {
-            $offre = new OffreDeStage();
+            $offre = new OffreDeStage('', '', new \DateTime(), new \DateTime(), 0, new Entreprise());
         } else {
             $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
-
             if (!$offre) {
                 $response->getBody()->write("Offre de stage non trouvée !");
                 return $response->withStatus(404);
@@ -66,8 +66,7 @@ class OffreController
             $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
             $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
             $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
-            
-            // Association de l'offre à une entreprise
+
             if (!empty($data['entreprise_id'])) {
                 $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise_id']);
                 if ($entreprise) {
@@ -103,7 +102,6 @@ class OffreController
             $em->flush();
         }
 
-        // Redirection vers la liste des offres après suppression
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
         $url = $routeParser->urlFor('offre-list');
         return $response->withHeader('Location', $url)->withStatus(302);
