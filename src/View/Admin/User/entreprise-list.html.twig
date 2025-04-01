@@ -2,6 +2,15 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Formulaire de recherche -->
+    <form method="GET" action="{{ url_for('entreprises-list') }}" class="mb-4">
+        <div class="form-group">
+            <label for="search">Rechercher une entreprise par titre</label>
+            <input type="text" name="search" id="search" class="form-control" value="{{ searchQuery }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Rechercher</button>
+    </form>
+
     {% if user.role == 'admin' or user.role == 'pilote' %}
         <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary mb-4">Ajouter une entreprise</a>
     {% endif %}
