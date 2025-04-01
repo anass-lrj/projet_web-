@@ -1,120 +1,68 @@
 <?php
-
 namespace App\Controller;
 
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 use Slim\Views\Twig;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Doctrine\ORM\EntityManager;
+use App\Domain\User;
+use Exception;
+use Psr\Container\ContainerInterface;
 
 class AuthController
 {
-    private Twig $twig;
+    protected $container;
 
-    public function __construct(Twig $twig)
+    public function __construct(ContainerInterface $container)
     {
-        $this->twig = $twig;
+        $this->container = $container;
     }
 
-    public function loginForm(Request $request, Response $response): Response
+    public function login(Request $request, Response $response, $args)
     {
-        return $this->twig->render($response, 'login.twig');
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'login.html.twig');
     }
 
-    public function registerForm(Request $request, Response $response): Response
+    public function handleLogin(Request $request, Response $response, $args)
     {
-        return $this->twig->render($response, 'register.twig');
-    }
+        $view = Twig::fromRequest($request);
+        $em = $this->container->get(EntityManager::class); 
 
-    public function register(Request $request, Response $response): Response
-    {
-        $data = $request->getParsedBody();
+        try {
+            $data = $request->getParsedBody();
+            $email = $data['email'];
+            $password = $data['password'];
+            
+            $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
 
-        $organisationName = trim($data['organisation'] ?? '');
-        $nom = trim($data['nom'] ?? '');
-        $prenom = trim($data['prenom'] ?? '');
-        $email = trim($data['email'] ?? '');
-        $mdp = trim($data['mdp'] ?? '');
+            $errors = [];
 
-        if (!$organisationName || !$nom || !$prenom || !$email || !$mdp) {
-            return $this->twig->render($response, 'register.twig', [
-                'error' => 'Tous les champs sont requis.'
-            ]);
-        }
-
-        $pdo = new \PDO(
-            "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4",
-            $_ENV['DB_USER'],
-            $_ENV['DB_PASS']
-        );
-
-        $stmtOrg = $pdo->prepare("INSERT INTO organisation (nom, date_creation) VALUES (:nom, NOW())");
-        $stmtOrg->execute(['nom' => $organisationName]);
-        $organisationId = $pdo->lastInsertId();
-
-        $hashedPassword = password_hash($mdp, PASSWORD_DEFAULT);
-
-        $stmtAdmin = $pdo->prepare("
-            INSERT INTO admins (mail, mdp, nom, prenom, id_organisation)
-            VALUES (:mail, :mdp, :nom, :prenom, :id_organisation)
-        ");
-        $stmtAdmin->execute([
-            'mail' => $email,
-            'mdp' => $hashedPassword,
-            'nom' => $nom,
-            'prenom' => $prenom,
-            'id_organisation' => $organisationId
-        ]);
-
-        return $response->withHeader('Location', '/login')->withStatus(302);
-    }
-
-    public function login(Request $request, Response $response): Response
-    {
-        $data = $request->getParsedBody();
-        $email = $data['email'] ?? '';
-        $password = $data['mdp'] ?? '';
-
-        $pdo = new \PDO(
-            "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4",
-            $_ENV['DB_USER'],
-            $_ENV['DB_PASS']
-        );
-
-        $user = null;
-        $statut = null;
-
-        $tables = [
-            'admins' => 'id_admin',
-            'pilotes' => 'id_pilote',
-            'eleves' => 'id_eleve',
-        ];
-
-        foreach ($tables as $table => $idColumn) {
-            $stmt = $pdo->prepare("SELECT * FROM $table WHERE mail = :email");
-            $stmt->execute(['email' => $email]);
-            $result = $stmt->fetch();
-
-            if ($result && password_verify($password, $result['mdp'])) {
-                $user = $result;
-                $statut = rtrim($table, 's');
-                break;
+            if ($user === null) {
+                $errors[] = 'Utilisateur non trouvé';
+                return $view->render($response, 'login.html.twig', ['errors' => $errors]);
             }
+
+            if (password_verify($password, $user->getMotDePasse())) {
+                $this->container->get('session')->set('user', $user); 
+                return $response
+                    ->withHeader('Location', '/')
+                    ->withStatus(302);
+            } else {
+                $errors[] = 'Mot de passe incorrect';
+            }
+
+            return $view->render($response, 'login.html.twig', ['errors' => $errors]);
+        } catch (Exception $e) {
+            error_log('Erreur : ' . $e->getMessage());
+            $errors[] = 'Erreur interne du serveur ' . $e->getMessage();
+            return $view->render($response, 'login.html.twig', ['errors' => $errors]);
         }
-
-        if ($user) {
-            $_SESSION['user'] = [
-                'id' => $user[$id],
-                'email' => $user['mail']
-            ];
-
-            return $response
-                ->withHeader('Location', '/')
-                ->withStatus(302);
-        }
-
-        return $this->twig->render($response, 'login.twig', [
-            'error' => 'Email ou mot de passe incorrect.'
-        ]);
     }
 
+    public function registerRoutes($app)
+    {
+        $app->get('/login', [$this, 'login'])->setName('login');
+        $app->post('/login', [$this, 'handleLogin']);
+    }
 }

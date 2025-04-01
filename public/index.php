@@ -18,6 +18,7 @@ use App\Controller\contactController;
 use Slim\Middleware\Session;
 use App\Controller\EntrepriseController;
 use App\Controller\OffreController;
+use App\Controller\AuthController;
 
 
 
@@ -53,10 +54,6 @@ $container->set(UserMiddleware::class, fn() => new UserMiddleware($container));
 $container->set(ResponseFactoryInterface::class, fn() => $app->getResponseFactory());
 $container->set('session', fn() => new \SlimSession\Helper());
 
-// Charger les routes
-$routes = require __DIR__ . '/../routes/web.php';
-$routes($app);
-
 // Enregistrer les contrôleurs dans le conteneur et les routes associées
 $controllers = [
     HomeController::class,
@@ -66,6 +63,7 @@ $controllers = [
     contactController::class,
     EntrepriseController::class,
     OffreController::class,
+    AuthController::class,
 ];
 
 foreach ($controllers as $controller) {
