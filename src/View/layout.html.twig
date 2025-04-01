@@ -207,22 +207,20 @@
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
-                onclick="toggleEncadre()"
               >
-                NomUtilisateur
+                <!-- Nom d'utilisateur affiché ici -->
+                <span id="userDropdownText">{{session.email}}</span>
               </a>
-              <div class="encadre-connexion" id="encadreConnexion"> </div>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="userDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" href="#" onclick="showOverlayConnexion()">Se connecter</a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <!-- Lien dynamique pour la connexion, inscription, ou déconnexion -->
+                <li id="loginLinkContainer">
+                  <a class="dropdown-item" href="{{ url_for('login') }}">Se connecter</a>
                 </li>
-                <li>
-                  <a class="dropdown-item"  href="#" onclick="showOverlayInscription()">
-                    S'inscrire
-                  </a>
+                <li id="registerLinkContainer">
+                  <a class="dropdown-item" href="#" onclick="showOverlayInscription()">S'inscrire</a>
+                </li>
+                <li id="logoutLinkContainer" style="display: none;">
+                  <a class="dropdown-item" href="#" onclick="logout()">Se déconnecter</a>
                 </li>
               </ul>
             </li>
@@ -230,6 +228,10 @@
         </div>
       </div>
     </nav>
+
+   <pre>{{ dump(session) }}</pre>
+   <pre>{{ dump(user) }}</pre>
+   <pre>{{ dump(test) }}</pre>
 
     <div id="content">
       {% block content %}
@@ -251,23 +253,6 @@
         }
     </script>
 
-    <div id="overlayConnexion" class="overlayConnexion">
-        <div class="overlayConnexion-content">
-            <h3>Vous pouvez vous connecter ici !</h3> <br>
-            <form action="/login" method="GET">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Votre email :</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Mot de passe :</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn_se_connecter">Se connecter</button>
-                <button class="btn_fermer_connexion" onclick="closeOverlayConnexion()">Fermer</button>
-            </form>
-        </div>
-    </div>
 
     <div id="overlayInscription" class="overlayInscription">
         <div class="overlayInscription-content">
@@ -344,23 +329,5 @@
         <!-- Footer -->
       {% endblock %}
     </div>
-    <script>
-      function showOverlayConnexion() {
-        document.getElementById('overlayConnexion').style.display = 'flex';
-      }
-
-      function closeOverlayConnexion() {
-        document.getElementById('overlayConnexion').style.display = 'none';
-      }
-
-      function showOverlayInscription() {
-        document.getElementById('overlayInscription').style.display = 'flex';
-      }
-
-      function closeOverlayInscription() {
-        document.getElementById('overlayInscription').style.display = 'none';
-      }
-    </script>
-
   </body>
 </html>

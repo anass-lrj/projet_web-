@@ -7,10 +7,12 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 use App\Middlewares\AdminMiddleware;
+use App\Middlewares\UserMiddleware;
 use Doctrine\ORM\EntityManager;
 use App\Domain\User;
 use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
+use Slim\Routing\RouteCollectorProxy;
 
 class UserAdminController
 {
@@ -23,33 +25,31 @@ class UserAdminController
 
    public function registerRoutes($app)
    {
-       $app->get('/admin/user/list', UserAdminController::class . ':paginatedList')
-           ->setName('list-racine')
-           ->add(AdminMiddleware::class);
+        $app->group('/admin/user', function (RouteCollectorProxy $group) {
+            $group->get('/list', UserAdminController::class . ':paginatedList')
+                ->setName('list-racine');
 
-       $app->get('/admin/user/list/page/{page}', UserAdminController::class . ':paginatedList')
-           ->setName('paginatedList')
-           ->add(AdminMiddleware::class);
+            $group->get('/list/page/{page}', UserAdminController::class . ':paginatedList')
+                ->setName('paginatedList');
 
-       $app->get('/admin/user/edit/{idUser}', UserAdminController::class . ':edit')
-           ->setName('user-edit')
-           ->add(AdminMiddleware::class);
+            $group->get('/edit/{idUser}', UserAdminController::class . ':edit')
+                ->setName('user-edit');
 
-       $app->post('/admin/user/edit/{idUser}', UserAdminController::class . ':edit')
-           ->setName('user-edit')
-           ->add(AdminMiddleware::class);
+            $group->post('/edit/{idUser}', UserAdminController::class . ':edit')
+                ->setName('user-edit');
 
-       $app->get('/admin/user/add', UserAdminController::class . ':edit')
-           ->setName('user-add')
-           ->add(AdminMiddleware::class);
+            $group->get('/add', UserAdminController::class . ':edit')
+                ->setName('user-add');
 
-       $app->post('/admin/user/add', UserAdminController::class . ':edit')
-           ->setName('user-add')
-           ->add(AdminMiddleware::class);
+            $group->post('/add', UserAdminController::class . ':edit')
+                ->setName('user-add');
 
-       $app->get('/admin/user/delete/{idUser}', UserAdminController::class . ':delete')
-           ->setName('user-delete')
-           ->add(AdminMiddleware::class);
+            $group->get('/delete/{idUser}', UserAdminController::class . ':delete')
+                ->setName('user-delete');
+
+
+        })->add(AdminMiddleware::class)
+        ->add(UserMiddleware::class);
    }
 
    public function edit(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
