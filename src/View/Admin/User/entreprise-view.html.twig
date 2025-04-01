@@ -5,7 +5,7 @@
 {% block content %}
     <div class="container mt-5">
         <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header" style="background-color: #78866B; color: white;">
                 <h1 class="text-center">{{ entrepriseEntity.titre }}</h1>
             </div>
             <div class="card-body">
@@ -17,7 +17,7 @@
                 <p><strong>Évaluation Moyenne :</strong> {{ entrepriseEntity.evaluationMoyenne }}</p>
             </div>
             <div class="card-footer text-center">
-                <a href="{{ url_for('entreprises-list') }}" class="btn btn-primary">Retour à la liste des entreprises</a>
+                <a href="{{ url_for('entreprises-list') }}" class="btn" style="background-color: #78866B; color: white;">Retour à la liste des entreprises</a>
             </div>
         </div>
     </div>
