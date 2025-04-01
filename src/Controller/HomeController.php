@@ -23,7 +23,7 @@ class HomeController
 
    public function registerRoutes($app)
    {
-       $app->get('/login', \App\Controller\HomeController::class . ':login')->setName('login');
+       //$app->get('/login', \App\Controller\HomeController::class . ':login')->setName('login');
        $app->get('/', \App\Controller\HomeController::class . ':home')->add(UserMiddleware::class);
        $app->get('/admin', \App\Controller\HomeController::class . ':home')->add(AdminMiddleware::class);
    }
@@ -40,17 +40,5 @@ class HomeController
         ]);
    }
 
-   public function login(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-   {
-        $view = Twig::fromRequest($request);
-
-        //FAKE LOGIN
-        $this->container->get('session')->set('role', 'admin');
-        $this->container->get('session')->set('idUser', 1);
-        
-        return $view->render($response, 'home.html.twig', [
-            'name' => 'John',
-        ]);
-   }
 
 }

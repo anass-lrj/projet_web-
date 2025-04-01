@@ -1,0 +1,39 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    <div id="overlayConnexion">
+        <div class="overlayConnexion-content">
+            <h3>Vous pouvez vous connecter ici !</h3> 
+            <br>
+
+            <div id="error-message" style="color: red; font-weight: bold;"></div>
+
+            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Votre email :</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mot de passe :</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn_se_connecter">Se connecter</button>
+                <button type="button" class="btn_fermer_connexion" onclick="closeOverlayConnexion()">Fermer</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        {% for error in errors %}
+                            <li>{{ error|e }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

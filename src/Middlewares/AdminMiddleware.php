@@ -22,7 +22,7 @@
      public function process(Request $request, RequestHandler $handler): Response
      {   
  
-         if($this->container->get('session')->get('role') != 'admin'){
+         if($this->container->get('session')->get('user')->getRole() != 'admin'){
              $routeParser = RouteContext::fromRequest($request)->getRouteParser();
              $url = $routeParser->urlFor('login');
              $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
