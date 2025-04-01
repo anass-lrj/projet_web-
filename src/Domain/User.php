@@ -55,11 +55,11 @@ final class User
     { 
         return $this->prenom; 
     }
-    public function setPrenom(string $prenom): void 
+    public function setPrenom(string $prenom): self 
     { 
         $this->prenom = $prenom; 
+        return $this;
     }
-
     public function getNom(): string 
     { 
         return $this->nom; 

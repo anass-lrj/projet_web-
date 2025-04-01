@@ -23,24 +23,43 @@
  
      public function process(Request $request, RequestHandler $handler): Response
      {   
- 
-         if($this->container->get('session')->get('user')->getRole() == NULL){
-             $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-             $url = $routeParser->urlFor('login');
-             $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
-             return $response
-                 ->withHeader('Location', $url)
-                 ->withStatus(302);
-         }
-         
-         $em = $this->container->get(EntityManager::class);
- 
-         $idUser = $this->container->get('session')->get('user')->getId();
-         $user = $em->getRepository(User::class)->find($idUser);
-         $this->container->get('view')->getEnvironment()->addGlobal('user', $user);
-         $request = $request->withAttribute('user', $user);
- 
-         $response = $handler->handle($request);
-         return $response;
-     }
+        $userSession = $this->container->get('session')->get('user');
+
+        if ($userSession === null) {
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $url = $routeParser->urlFor('login');
+            $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
+            return $response
+                ->withHeader('Location', $url)
+                ->withStatus(302);
+        }
+
+        if ($userSession->getRole() === null) {
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $url = $routeParser->urlFor('login');
+            $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
+            return $response
+                ->withHeader('Location', $url)
+                ->withStatus(302);
+        }
+
+        $em = $this->container->get(EntityManager::class);
+        $user = $em->getRepository(User::class)->find($userSession->getId());
+
+        if ($user === null) {
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $url = $routeParser->urlFor('login');
+            $response = $this->container->get(ResponseFactoryInterface::class)->createResponse();
+            return $response
+                ->withHeader('Location', $url)
+                ->withStatus(302);
+        }
+
+        $this->container->get('view')->getEnvironment()->addGlobal('currentUser', $user);
+
+        $request = $request->withAttribute('user', $user);
+
+        $response = $handler->handle($request);
+        return $response;
+        }
  }

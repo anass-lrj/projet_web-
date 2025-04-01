@@ -48,6 +48,7 @@ class AuthController
                 return $response
                     ->withHeader('Location', '/')
                     ->withStatus(302);
+                    console.log(app.user.prenom);
             } else {
                 $errors[] = 'Mot de passe incorrect';
             }
