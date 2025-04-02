@@ -18,15 +18,16 @@
                     </div>
                 </div>
             </div>
-              {% if currentUser.role == 'admin' or currentUser.role == 'pilote' %}
-            <div class="mt-4">
-                <a href="{{ url_for('list-racine') }}" class="btn btn-primary">Voir la liste des utilisateurs</a>
+            {% if currentUser.role == 'admin' or currentUser.role == 'pilote' %}
+            <div class="mt-4 d-flex flex-wrap gap-3">
+                <a href="{{ url_for('list-racine') }}" class="btn btn-primary shadow-sm">
+                    <i class="fas fa-users"></i> Voir la liste des utilisateurs
+                </a>            
+                <a href="{{ url_for('domaines-list') }}" class="btn btn-success shadow-sm">
+                    <i class="fas fa-cogs"></i> Gérer les domaines
+                </a>
             </div>
-        {% endif %}
-        {% if currentUser.role == 'admin' or currentUser.role == 'pilote' %}
-    <div class="mt-4">
-        <a href="{{ url_for('domaines-list') }}" class="btn btn-primary">Gérer les domaines</a>
-{% endif %}
+            {% endif %}
     {% else %}
         <h1>Veuillez vous connecter</h1>
     {% endif %}

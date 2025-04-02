@@ -19,10 +19,8 @@
         
         <button type="submit" class="btn btn-secondary">Rechercher</button>
     </form>
-
-    {% if user.role == 'admin' or user.role == 'pilote' %}
         <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary mb-4">Ajouter une entreprise</a>
-    {% endif %}
+    
 
     <div class="row">
         {% for entreprise in entreprises %}
