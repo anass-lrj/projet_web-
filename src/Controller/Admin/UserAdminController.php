@@ -31,6 +31,7 @@ class UserAdminController
         $group->get('/list', UserAdminController::class . ':paginatedList')->setName('list-racine');
         $group->get('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->post('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
+        $group->get('/search', UserAdminController::class . ':search')->setName('user-search');
         $group->get('/add', UserAdminController::class . ':edit')->setName('user-add');
         $group->post('/add', UserAdminController::class . ':edit')->setName('user-add');
         $group->get('/delete/{idUser}', UserAdminController::class . ':delete')->setName('user-delete');
@@ -184,4 +185,35 @@ public function delete(ServerRequestInterface $request, ResponseInterface $respo
             'totalPages' => ceil($totalUsers / $limit),
         ]);
    }
+
+   public function search(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $queryParams = $request->getQueryParams();
+    $prenom = $queryParams['prenom'] ?? null;
+    $nom = $queryParams['nom'] ?? null;
+
+    $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+
+    if ($prenom) {
+        $queryBuilder->andWhere('u.prenom LIKE :prenom')
+                     ->setParameter('prenom', '%' . $prenom . '%');
+    }
+
+    if ($nom) {
+        $queryBuilder->andWhere('u.nom LIKE :nom')
+                     ->setParameter('nom', '%' . $nom . '%');
+    }
+
+    $users = $queryBuilder->getQuery()->getResult();
+
+    $view = Twig::fromRequest($request);
+
+    return $view->render($response, 'Admin/User/user-list.html.twig', [
+        'users' => $users,
+        'prenom' => $prenom,
+        'nom' => $nom,
+    ]);
+}
+
 }

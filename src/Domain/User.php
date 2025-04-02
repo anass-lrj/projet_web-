@@ -1,4 +1,5 @@
 <?php
+// src/Domain/User.php
 
 namespace App\Domain;
 
@@ -43,7 +44,7 @@ class User
     #[ORM\OneToOne(mappedBy: "utilisateur", targetEntity: Pilote::class)]
     private ?Pilote $pilote = null;
 
-    #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: "users")]
+    #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: "users", cascade: ["persist", "remove"])]
     #[ORM\JoinTable(name: "user_promotion")]
     private Collection $promotions;
 
@@ -75,20 +76,28 @@ class User
     public function getRole(): string { return $this->role; }
     public function setRole(string $role): void { $this->role = $role; }
    
-   
+       
     public function getPromotions(): Collection {
         return $this->promotions;
     }
-    
-    public function addPromotion(Promotion $promotion): void {
+
+    public function addPromotion(Promotion $promotion): void
+    {
         if (!$this->promotions->contains($promotion)) {
             $this->promotions->add($promotion);
         }
     }
-    
-    public function removePromotion(Promotion $promotion): void {
-        $this->promotions->removeElement($promotion);
-    }
 
+    public function removePromotion(Promotion $promotion): self
+    {
+        if ($this->promotions->contains($promotion)) {
+            $this->promotions->removeElement($promotion);
+        }
+
+        return $this;
+    }
 }
+
+    
+ 
 

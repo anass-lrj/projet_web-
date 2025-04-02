@@ -25,13 +25,15 @@ class Promotion
     #[ORM\OneToMany(targetEntity: Etudiant::class, mappedBy: "promotion")]
     private Collection $etudiants;
 
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: "promotions", cascade: ["persist", "remove"])]
+    private Collection $users;
+
     public function __construct(string $nom, ?Pilote $pilote = null)
     {
         $this->nom = $nom;
         $this->pilote = $pilote;
         $this->etudiants = new ArrayCollection();
         $this->users = new ArrayCollection();
-
     }
 
     public function getId(): int { return $this->id; }
@@ -41,9 +43,22 @@ class Promotion
     public function setPilote(?Pilote $pilote): void { $this->pilote = $pilote; }
     public function getEtudiants(): Collection { return $this->etudiants; }
 
+       
     public function getUsers(): Collection {
         return $this->users;
     }
 
-}
+    public function addUser(User $user): void
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+        }
+    }
 
+    public function removeUser(User $user): void
+    {
+        if ($this->users->contains($user)) {
+            $this->users->removeElement($user);
+        }
+    }
+}
