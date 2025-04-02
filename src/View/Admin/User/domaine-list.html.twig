@@ -12,7 +12,7 @@
                     <div class="card-body">
                         <h5 class="card-title text-dark">{{ domaine.nom }}</h5>
                         <p class="card-text text-muted">ID : <strong>{{ domaine.id }}</strong></p>
-                        <a href="{{ url_for('domaine-delete', { 'id': domaine.id }) }}" class="btn btn-outline-danger btn-sm">Supprimer</a>
+                        <a href="{{ url_for('domaine-delete', { 'id': domaine.id }) }}" class="btn btn-outline-danger btn-sm bi bi-trash3-fill"> Supprimer</a>
                     </div>
                 </div>
             </div>
@@ -28,7 +28,7 @@
                     <label for="nom" class="form-label">Nom du domaine :</label>
                     <input type="text" id="nom" name="nom" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-success w-100">Ajouter Domaine</button>
+                <button type="submit" class="btn btn-success w-100 bi-plus-circle"> Ajouter Domaine</button>
             </form>
         </div>
     </div>

@@ -31,11 +31,11 @@
                         <p class="card-text"><strong>Rôle :</strong> {{ user.role }}</p>
 
                         {% if currentUser.role == 'admin' %}
-                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary">Modifier</a>
-                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
+                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
+                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')"> Supprimer</a>
                         {% elseif currentUser.role == 'pilote' and user.role == 'user' %}
-                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary">Modifier</a>
-                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
+                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
+                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
                         {% endif %}
                     </div>
                 </div>
