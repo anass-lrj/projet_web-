@@ -19,6 +19,23 @@
         </div>
     </form>
 
+    <form method="GET" action="{{ url_for('user-list') }}" class="mb-4">
+    <div class="row">
+        <div class="col-md-4">
+            <select name="role" class="form-control">
+                <option value="">Tous les rôles</option>
+                <option value="admin" {% if selectedRole == 'admin' %}selected{% endif %}>Admin</option>
+                <option value="pilote" {% if selectedRole == 'pilote' %}selected{% endif %}>Pilote</option>
+                <option value="user" {% if selectedRole == 'user' %}selected{% endif %}>Utilisateur</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+        </div>
+    </div>
+</form>
+
+
     <div class="row">
         {% for user in users %}
             <div class="col-md-4">

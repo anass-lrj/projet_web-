@@ -28,7 +28,7 @@ class UserAdminController
    public function registerRoutes($app)
    {
     $app->group('/admin/user', function (RouteCollectorProxy $group) {
-        $group->get('/list', UserAdminController::class . ':paginatedList')->setName('list-racine');
+        $group->get('/list', UserAdminController::class . ':list')->setName('user-list');
         $group->get('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->post('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->get('/search', UserAdminController::class . ':search')->setName('user-search');
@@ -155,17 +155,30 @@ public function delete(ServerRequestInterface $request, ResponseInterface $respo
 }
 
 
-   public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-   {
-        $em = $this->container->get(EntityManager::class);
-        $users = $em->getRepository(User::class)->findAll();
+public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $queryParams = $request->getQueryParams();
+    $role = $queryParams['role'] ?? null;
 
-        $view = Twig::fromRequest($request);
+    $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
 
-        return $view->render($response, 'Admin/User/user-list.html.twig', [
-            'users' => $users,
-        ]);
-   }
+    if (!empty($role)) {
+        $queryBuilder->where('u.role = :role')
+                     ->setParameter('role', $role);
+    }
+
+    $users = $queryBuilder->getQuery()->getResult();
+
+    $view = Twig::fromRequest($request);
+
+    return $view->render($response, 'Admin/User/user-list.html.twig', [
+        'users' => $users,
+        'selectedRole' => $role, // Permet de garder la sélection active dans le formulaire
+    ]);
+}
+
+
 
    public function paginatedList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
