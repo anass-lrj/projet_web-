@@ -1,3 +1,4 @@
+
 {% extends 'layout.html.twig' %}
 
 {% block title %}Détails de l'Entreprise{% endblock %}
@@ -19,6 +20,23 @@
             <div class="card-footer text-center">
                 <a href="{{ url_for('entreprises-list') }}" class="btn" style="background-color: #78866B; color: white;">Retour à la liste des entreprises</a>
             </div>
+        </div>
+        <div class="mt-5">
+        <pre>{{ dump(OffreDeStage) }}</pre>
+            <h2>Offres liées à cette entreprise</h2>
+            {% if offres is not empty %}
+                <div class="list-group">
+                    {% for offre in offres %}
+                        <a href="{{ url_for('offre-view', {id: offre.id}) }}" class="list-group-item list-group-item-action">
+                            <h5 class="mb-1">{{ offre.titre }}</h5>
+                            <p class="mb-1">{{ offre.description|slice(0, 100) }}...</p>
+                            <small>Publié le : {{ offre.dateCreation|date('d/m/Y') }}</small>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Aucune offre n'est associée à cette entreprise.</p>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
