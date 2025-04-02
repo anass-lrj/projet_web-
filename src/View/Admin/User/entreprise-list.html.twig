@@ -19,7 +19,7 @@
         
         <button type="submit" class="btn btn-secondary">Rechercher</button>
     </form>
-        <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary mb-4">Ajouter une entreprise</a>
+        <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary bi bi-plus-circle mb-4"> Ajouter une entreprise</a>
     
 
     <div class="row">
@@ -48,11 +48,11 @@
                             <p class="card-text"><strong>Domaine :</strong> {{ entreprise.domaine.nom }}</p>
                         {% endif %}
 
-                        <a href="{{ url_for('entreprise-aperçu', {id: entreprise.id}) }}" class="btn btn-primary">Aperçu</a>
+                        <a href="{{ url_for('entreprise-aperçu', {id: entreprise.id}) }}" class="btn btn-primary bi bi-eye"> Aperçu</a>
 
                         {% if user.role == 'admin' or user.role == 'pilote' %}
-                            <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary">Modifier</a>
-                            <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')">Supprimer</a>
+                            <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
+                            <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')"> Supprimer</a>
                         {% endif %}
                     </div>
                 </div>
