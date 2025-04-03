@@ -70,6 +70,7 @@ class Entreprise
         }
         return $this;
     }
+
     
     public function getId(): ?int
     {

@@ -138,75 +138,76 @@ class EntrepriseController
             'totalPages' => ceil($totalEntreprises / $limit),
         ]);
     }
+
     public function listEntreprises(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $queryParams = $request->getQueryParams();
+    {
+        $em = $this->container->get(EntityManager::class);
+        $queryParams = $request->getQueryParams();
 
-    $searchQuery = $queryParams['search'] ?? '';
-    $domaineId = $queryParams['domaine_id'] ?? null;
+        $searchQuery = $queryParams['search'] ?? '';
+        $domaineId = $queryParams['domaine_id'] ?? null;
 
-    $qb = $em->getRepository(Entreprise::class)->createQueryBuilder('e');
+        $qb = $em->getRepository(Entreprise::class)->createQueryBuilder('e');
 
-    // Appliquer le filtrage par domaine si un domaine est sélectionné
-    if (!empty($domaineId)) {
-        $qb->andWhere('e.domaine = :domaine')
-           ->setParameter('domaine', $domaineId);
+        // Appliquer le filtrage par domaine si un domaine est sélectionné
+        if (!empty($domaineId)) {
+            $qb->andWhere('e.domaine = :domaine')
+            ->setParameter('domaine', $domaineId);
+        }
+
+        // Appliquer la recherche par nom si une requête est donnée
+        if (!empty($searchQuery)) {
+            $qb->andWhere('e.titre LIKE :search')
+            ->setParameter('search', '%' . $searchQuery . '%');
+        }
+
+        // Exécuter la requête
+        $entreprises = $qb->getQuery()->getResult();
+
+        // Récupérer tous les domaines pour le filtre
+        $domaines = $em->getRepository(Domaine::class)->findAll();
+
+        // Récupérer l'utilisateur actuel depuis la session
+        $session = $this->container->get('session');
+        $user = $session->get('user');
+
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
+            'entreprises' => $entreprises,
+            'domaines' => $domaines,
+            'selectedDomaine' => $domaineId,
+            'searchQuery' => $searchQuery,
+            'user' => $user,
+        ]);
     }
-
-    // Appliquer la recherche par nom si une requête est donnée
-    if (!empty($searchQuery)) {
-        $qb->andWhere('e.titre LIKE :search')
-           ->setParameter('search', '%' . $searchQuery . '%');
-    }
-
-    // Exécuter la requête
-    $entreprises = $qb->getQuery()->getResult();
-
-    // Récupérer tous les domaines pour le filtre
-    $domaines = $em->getRepository(Domaine::class)->findAll();
-
-    // Récupérer l'utilisateur actuel depuis la session
-    $session = $this->container->get('session');
-    $user = $session->get('user');
-
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/entreprise-list.html.twig', [
-        'entreprises' => $entreprises,
-        'domaines' => $domaines,
-        'selectedDomaine' => $domaineId,
-        'searchQuery' => $searchQuery,
-        'user' => $user,
-    ]);
-
-
-    
-}
 
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $entityManager = $this->container->get(EntityManager::class);
+    {
+        $entityManager = $this->container->get(EntityManager::class);
 
-    // Vérifie si l'ID est fourni
-    if (!isset($args['id'])) {
-        $response->getBody()->write("ID d'entreprise non fourni !");
-        return $response->withStatus(400);
+        // Vérifie si l'ID est fourni
+        if (!isset($args['id'])) {
+            $response->getBody()->write("ID d'entreprise non fourni !");
+            return $response->withStatus(400);
+        }
+
+        // Recherche de l'entreprise
+        $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
+
+        if (!$entreprise) {
+            $response->getBody()->write("Entreprise non trouvée !");
+            return $response->withStatus(404);
+        }
+
+        // Récupérer les offres associées à cette entreprise
+        $offres = $entreprise->getOffresDeStage();
+
+        // Affichage de la vue avec les détails de l'entreprise
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
+            'entrepriseEntity' => $entreprise,
+            'offres' => $offres,
+        ]);
     }
-
-    // Recherche de l'entreprise
-    $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-
-    if (!$entreprise) {
-        $response->getBody()->write("Entreprise non trouvée !");
-        return $response->withStatus(404);
-    }
-
-    // Affichage de la vue avec les détails de l'entreprise
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
-        'entrepriseEntity' => $entreprise
-    ]);
-}
-   
 }
 
