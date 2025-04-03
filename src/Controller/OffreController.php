@@ -13,6 +13,8 @@ use App\Domain\Competence;
 use Doctrine\ORM\EntityManager;
 use Slim\Routing\RouteContext;
 use App\Middlewares\UserMiddleware;
+use App\Domain\Candidature;
+
 
 class OffreController
 {
@@ -38,6 +40,9 @@ class OffreController
         $app->post('/competences/add', OffreController::class . ':addCompetence')->setName('competence-add')->add(UserMiddleware::class);
         $app->post('/competences/delete/{id}', OffreController::class . ':deleteCompetence')->setName('competence-delete')->add(UserMiddleware::class);
         $app->get('/offres/list[/{page}]', OffreController::class . ':list')->setName('offre-paginated-list')->add(UserMiddleware::class);
+        $app->get('/offres/postuler/{id}', OffreController::class . ':postuler')->setName('offre-postuler')->add(UserMiddleware::class);
+        $app->get('/offres/details/{id}', OffreController::class . ':details')->setName('offre-details')->add(UserMiddleware::class);
+        $app->post('/offres/postuler/{id}', OffreController::class . ':soumettreCandidature')->setName('offre-postuler-submit')->add(UserMiddleware::class);
     }
 
 
@@ -361,4 +366,105 @@ public function deleteCompetence(ServerRequestInterface $request, ResponseInterf
     $url = $routeParser->urlFor('competence-manage');
     return $response->withHeader('Location', $url)->withStatus(302);
 }
+
+// Removed duplicate method to avoid fatal error
+
+public function postuler(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user'); // Récupérer l'utilisateur connecté
+    $em = $this->container->get(EntityManager::class);
+
+    // Vérifier si l'utilisateur est connecté
+    if (!$user) {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('login'); // Rediriger vers la page de connexion si non connecté
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+
+    // Récupérer l'offre à partir de l'ID
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Rendre la vue Twig pour le formulaire
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/formulaire.html.twig', [
+        'user' => $user,
+        'offre' => $offre,
+    ]);
+}
+
+public function details(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+
+    // Récupérer l'offre à partir de l'ID
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Rendre la vue Twig pour afficher les détails de l'offre
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-details.html.twig', [
+        'offre' => $offre,
+    ]);
+}
+
+public function soumettreCandidature(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user'); // Récupérer l'utilisateur connecté
+    $em = $this->container->get(EntityManager::class);
+
+    // Vérifier si l'utilisateur est connecté
+    if (!$user) {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('login'); // Rediriger vers la page de connexion si non connecté
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+
+    // Récupérer l'offre à partir de l'ID
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Récupérer les données du formulaire
+    $data = $request->getParsedBody();
+    $uploadedFiles = $request->getUploadedFiles();
+
+    // Créer une nouvelle candidature
+    $candidature = new Candidature();
+    $candidature->setUser($user);
+    $candidature->setOffre($offre);
+    $candidature->setNom($data['nom']);
+    $candidature->setPrenom($data['prenom']);
+    $candidature->setAdresse($data['adresse']);
+    $candidature->setLettreMotivation($data['lettreMotivation']);
+    $candidature->setTelephone($data['telephone'] ?? null);
+    $candidature->setPortfolio($data['portfolio'] ?? null);
+    $candidature->setMessage($data['message'] ?? null);
+
+    // Gérer l'upload du CV
+    if (isset($uploadedFiles['cv']) && $uploadedFiles['cv']->getError() === UPLOAD_ERR_OK) {
+        $cv = $uploadedFiles['cv'];
+        $filename = sprintf('%s_%s', uniqid(), $cv->getClientFilename());
+        $cv->moveTo(__DIR__ . '/../../uploads/cv/' . $filename);
+        $candidature->setCv($filename);
+    }
+
+    // Sauvegarder la candidature
+    $em->persist($candidature);
+    $em->flush();
+
+    // Rediriger vers la liste des offres
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('offre-list');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
+
 }
