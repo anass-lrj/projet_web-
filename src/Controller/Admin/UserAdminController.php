@@ -186,24 +186,7 @@ public function list(ServerRequestInterface $request, ResponseInterface $respons
 
 
 
-   public function paginatedList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-   {
-        $em = $this->container->get(EntityManager::class);
-        $page = (int)($args['page'] ?? 1);
-        $limit = 10;
-        $offset = ($page - 1) * $limit;
-
-        $users = $em->getRepository(User::class)->findBy([], null, $limit, $offset);
-        $totalUsers = $em->getRepository(User::class)->count([]);
-
-        $view = Twig::fromRequest($request);
-
-        return $view->render($response, 'Admin/User/user-list.html.twig', [
-            'users' => $users,
-            'currentPage' => $page,
-            'totalPages' => ceil($totalUsers / $limit),
-        ]);
-   }
+  
 
    public function search(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
