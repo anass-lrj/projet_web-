@@ -200,13 +200,12 @@ class EntrepriseController
 
         // Récupérer les offres associées à cette entreprise
         $offres = $entreprise->getOffresDeStage();
-
-    // Affichage de la vue avec les détails de l'entreprise
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
-        'entrepriseEntity' => $entreprise
-    ]);
+ 
+        // Affichage de la vue avec les détails de l'entreprise
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
+            'entrepriseEntity' => $entreprise,
+            'offres' => $offres,
+        ]);
+        }
 }
-   
-}
-
