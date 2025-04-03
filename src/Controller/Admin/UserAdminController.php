@@ -108,7 +108,7 @@ class UserAdminController
    
            // Redirection vers la liste des utilisateurs après l'enregistrement
            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-           $url = $routeParser->urlFor('list-racine');  // redirection vers la liste des utilisateurs
+           $url = $routeParser->urlFor('user-list');  // redirection vers la liste des utilisateurs
            return $response->withHeader('Location', $url)->withStatus(302);
        }
    
@@ -150,7 +150,7 @@ public function delete(ServerRequestInterface $request, ResponseInterface $respo
 
     // Redirection après suppression
     $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-    $url = $routeParser->urlFor('list-racine');
+    $url = $routeParser->urlFor('user-list');
     return $response->withHeader('Location', $url)->withStatus(302);
 }
 

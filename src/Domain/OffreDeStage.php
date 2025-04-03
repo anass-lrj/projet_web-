@@ -3,6 +3,8 @@
 namespace App\Domain;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity, ORM\Table(name: 'offre_de_stage')]
 class OffreDeStage
@@ -32,6 +34,9 @@ class OffreDeStage
     #[ORM\JoinColumn(name: 'entreprise_id', referencedColumnName: 'id', nullable: false)]
     private Entreprise $entreprise;
 
+    #[ORM\OneToMany(mappedBy: 'offre', targetEntity: Wishlist::class, cascade: ['persist', 'remove'])]
+    private Collection $wishlists;
+
     public function __construct(
         string $titre,
         string $description,
@@ -39,6 +44,7 @@ class OffreDeStage
         \DateTime $dateFin,
         float $remuneration,
         Entreprise $entreprise
+        
     ) {
         $this->titre = $titre;
         $this->description = $description;
@@ -47,6 +53,8 @@ class OffreDeStage
         $this->remuneration = $remuneration;
         $this->entreprise = $entreprise;
         $this->dateCreation = new \DateTimeImmutable();
+        $this->wishlists = new ArrayCollection();
+
     }
 
     public function getId(): int
@@ -124,4 +132,6 @@ class OffreDeStage
         $this->entreprise = $entreprise;
         return $this;
     }
+    public function getWishlist(): Collection { return $this->wishlist; }
+
 }

@@ -7,9 +7,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 use App\Domain\OffreDeStage;
+use App\Domain\Wishlist;
 use App\Domain\Entreprise;
-use Slim\Routing\RouteContext;
 use Doctrine\ORM\EntityManager;
+use Slim\Routing\RouteContext;
 use App\Middlewares\UserMiddleware;
 
 class OffreController
@@ -29,19 +30,28 @@ class OffreController
         $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add')->add(UserMiddleware::class);
         $app->post('/offres/add', OffreController::class . ':editOffre')->add(UserMiddleware::class);
         $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete')->add(UserMiddleware::class);
+        $app->post('/wishlist/toggle/{id}', OffreController::class . ':toggleWishlist')->setName('wishlist-toggle')->add(UserMiddleware::class);
+
     }
 
     public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $em = $this->container->get(EntityManager::class);
         $offres = $em->getRepository(OffreDeStage::class)->findAll();
+        $user = $request->getAttribute('user');
+        
+        $wishlist = [];
+        if ($user) {
+            $wishlist = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Wishlist::class)->findBy(['user' => $user]));
+        }
 
         $view = Twig::fromRequest($request);
-
         return $view->render($response, 'Admin/User/offre-list.html.twig', [
             'offres' => $offres,
+            'wishlist' => $wishlist,
         ]);
     }
+
 
     public function editOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
@@ -125,5 +135,28 @@ class OffreController
             'currentPage' => $page,
             'totalPages' => ceil($totalOffres / $limit),
         ]);
+    }
+    public function toggleWishlist(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $em = $this->container->get(EntityManager::class);
+        $user = $request->getAttribute('user');
+        $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+
+        if (!$user || !$offre) {
+            return $response->withStatus(400);
+        }
+
+        $wishlistRepo = $em->getRepository(Wishlist::class);
+        $wishlistItem = $wishlistRepo->findOneBy(['user' => $user, 'offre' => $offre]);
+
+        if ($wishlistItem) {
+            $em->remove($wishlistItem);
+        } else {
+            $wishlistItem = new Wishlist($user, $offre);
+            $em->persist($wishlistItem);
+        }
+
+        $em->flush();
+        return $response->withHeader('Location', '/offres')->withStatus(302);
     }
 }
