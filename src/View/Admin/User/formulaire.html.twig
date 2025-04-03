@@ -1,0 +1,46 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Postuler à l'offre : {{ offre.titre }}</h2>
+    <form method="post" action="{{ url_for('offre-postuler-submit', {'id': offre.id}) }}" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom</label>
+            <input type="text" class="form-control" id="nom" name="nom" value="{{ user.nom }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="prenom" class="form-label">Prénom</label>
+            <input type="text" class="form-control" id="prenom" name="prenom" value="{{ user.prenom }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="adresse" class="form-label">Adresse</label>
+            <input type="text" class="form-control" id="adresse" name="adresse" required>
+        </div>
+        <div class="mb-3">
+            <label for="telephone" class="form-label">Téléphone</label>
+            <input type="text" class="form-control" id="telephone" name="telephone" placeholder="Votre numéro de téléphone">
+        </div>
+        <div class="mb-3">
+            <label for="cv" class="form-label">CV</label>
+            <input type="file" class="form-control" id="cv" name="cv" accept=".pdf,.doc,.docx">
+        </div>
+        <div class="mb-3">
+            <label for="portfolio" class="form-label">Portfolio / Site web</label>
+            <input type="url" class="form-control" id="portfolio" name="portfolio" placeholder="Lien vers votre portfolio ou site web">
+        </div>
+        <div class="mb-3">
+            <label for="lettreMotivation" class="form-label">Lettre de motivation</label>
+            <textarea class="form-control" id="lettreMotivation" name="lettreMotivation" rows="5" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">Message personnalisé</label>
+            <textarea class="form-control" id="message" name="message" rows="3" placeholder="Ajoutez un message personnalisé (facultatif)"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Envoyer ma candidature</button>
+    </form>
+</div>
+{% endblock %}
