@@ -31,6 +31,10 @@ class OffreController
         $app->post('/offres/add', OffreController::class . ':editOffre')->add(UserMiddleware::class);
         $app->get('/offres/delete/{id}', OffreController::class . ':delete')->setName('offre-delete')->add(UserMiddleware::class);
         $app->post('/wishlist/toggle/{id}', OffreController::class . ':toggleWishlist')->setName('wishlist-toggle')->add(UserMiddleware::class);
+        $app->get('/wishlist', OffreController::class . ':wishlist')->setName('wishlist')->add(UserMiddleware::class);
+        $app->get('/wishlist/remove/{id}', OffreController::class . ':removeFromWishlist')->setName('wishlist-remove')->add(UserMiddleware::class);
+
+
 
     }
 
@@ -54,69 +58,86 @@ class OffreController
 
 
     public function editOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $entityManager = $this->container->get(EntityManager::class);
-        $add = !isset($args['id']);
-        $offre = null;
+{
+    $user = $request->getAttribute('user');
 
-        if ($add) {
-            $offre = new OffreDeStage('', '', new \DateTime(), new \DateTime(), 0, new Entreprise());
-        } else {
-            $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
-            if (!$offre) {
-                $response->getBody()->write("Offre de stage non trouvée !");
-                return $response->withStatus(404);
-            }
-        }
-
-        if ($request->getMethod() === 'POST') {
-            $data = $request->getParsedBody();
-
-            $offre->setTitre($data['titre'] ?? '');
-            $offre->setDescription($data['description'] ?? '');
-            $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
-            $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
-            $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
-
-            if (!empty($data['entreprise'])) {
-                $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
-                if ($entreprise) {
-                    $offre->setEntreprise($entreprise);
-                }
-            }
-
-            $entityManager->persist($offre);
-            $entityManager->flush();
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $url = $routeParser->urlFor('offre-list');
-            return $response->withHeader('Location', $url)->withStatus(302);
-        }
-
-        $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
-
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/offre-edit.html.twig', [
-            'offreEntity' => $offre,
-            'add' => $add,
-            'entreprises' => $entreprises,
-        ]);
+    // Vérifier si l'utilisateur est admin ou pilote
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé !");
+        return $response->withStatus(403);
     }
 
-    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $em = $this->container->get(EntityManager::class);
-        $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+    $entityManager = $this->container->get(EntityManager::class);
+    $add = !isset($args['id']);
+    $offre = null;
 
-        if ($offre) {
-            $em->remove($offre);
-            $em->flush();
+    if ($add) {
+        $offre = new OffreDeStage('', '', new \DateTime(), new \DateTime(), 0, new Entreprise());
+    } else {
+        $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
+        if (!$offre) {
+            $response->getBody()->write("Offre de stage non trouvée !");
+            return $response->withStatus(404);
         }
+    }
+
+    if ($request->getMethod() === 'POST') {
+        $data = $request->getParsedBody();
+
+        $offre->setTitre($data['titre'] ?? '');
+        $offre->setDescription($data['description'] ?? '');
+        $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
+        $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
+        $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
+
+        if (!empty($data['entreprise'])) {
+            $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
+            if ($entreprise) {
+                $offre->setEntreprise($entreprise);
+            }
+        }
+
+        $entityManager->persist($offre);
+        $entityManager->flush();
 
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
         $url = $routeParser->urlFor('offre-list');
         return $response->withHeader('Location', $url)->withStatus(302);
     }
+
+    $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-edit.html.twig', [
+        'offreEntity' => $offre,
+        'add' => $add,
+        'entreprises' => $entreprises,
+    ]);
+}
+
+public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user');
+
+    // Vérifier si l'utilisateur est admin ou pilote
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé !");
+        return $response->withStatus(403);
+    }
+
+    $em = $this->container->get(EntityManager::class);
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+
+    if ($offre) {
+        $em->remove($offre);
+        $em->flush();
+    }
+
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('offre-list');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
+
 
     public function paginatedList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
@@ -159,4 +180,51 @@ class OffreController
         $em->flush();
         return $response->withHeader('Location', '/offres')->withStatus(302);
     }
+
+public function wishlist(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $user = $request->getAttribute('user'); // Récupère l'utilisateur connecté
+
+    // Vérifiez si l'utilisateur est connecté
+    if (!$user) {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('login'); // Redirigez vers la page de connexion si non connecté
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+
+    // Récupérez les offres dans la wishlist de l'utilisateur
+    $wishlistItems = $em->getRepository(Wishlist::class)->findBy(['user' => $user]);
+
+    // Rendre la vue Twig
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/wishlist.html.twig', [
+        'wishlistItems' => $wishlistItems,
+    ]);
+}
+
+public function removeFromWishlist(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $user = $request->getAttribute('user'); // Récupère l'utilisateur connecté
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+
+    if (!$user || !$offre) {
+        return $response->withStatus(400);
+    }
+
+    $wishlistRepo = $em->getRepository(Wishlist::class);
+    $wishlistItem = $wishlistRepo->findOneBy(['user' => $user, 'offre' => $offre]);
+
+    if ($wishlistItem) {
+        $em->remove($wishlistItem);
+        $em->flush();
+    }
+
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('wishlist');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
+
+
 }
