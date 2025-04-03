@@ -37,6 +37,10 @@ class OffreDeStage
     #[ORM\OneToMany(mappedBy: 'offre', targetEntity: Wishlist::class, cascade: ['persist', 'remove'])]
     private Collection $wishlists;
 
+    #[ORM\ManyToMany(targetEntity: Competence::class, inversedBy: 'offres', cascade: ['persist'])]
+#[ORM\JoinTable(name: 'offre_competence')]
+private Collection $competences;
+
     public function __construct(
         string $titre,
         string $description,
@@ -54,6 +58,8 @@ class OffreDeStage
         $this->entreprise = $entreprise;
         $this->dateCreation = new \DateTimeImmutable();
         $this->wishlists = new ArrayCollection();
+        $this->competences = new ArrayCollection();
+
 
     }
 
@@ -134,4 +140,27 @@ class OffreDeStage
     }
     public function getWishlist(): Collection { return $this->wishlist; }
 
+    public function getCompetences(): Collection
+    {
+        return $this->competences;
+    }
+    
+    public function addCompetence(Competence $competence): self
+    {
+        if (!$this->competences->contains($competence)) {
+            $this->competences->add($competence);
+            $competence->getOffres()->add($this);
+        }
+        return $this;
+    }
+    
+    public function removeCompetence(Competence $competence): self
+    {
+        if ($this->competences->contains($competence)) {
+            $this->competences->removeElement($competence);
+            $competence->getOffres()->removeElement($this);
+        }
+        return $this;
+    }
 }
+

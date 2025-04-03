@@ -50,6 +50,18 @@
                     <label for="remuneration">Rémunération horraire</label>
                     <input type="number" step="0.01" class="form-control" id="remuneration" name="remuneration" value="{{ offreEntity.remuneration|default('') }}">
                 </div>
+<div class="form-group">
+    <label for="competences">Compétences recherchées</label>
+    <select id="competences" name="competences[]" class="form-control" multiple>
+        <option value="null" {% if offreEntity.competences|length == 0 %}selected{% endif %}>Aucune</option>
+        {% for competence in competences %}
+            <option value="{{ competence.id }}" {% if competence in offreEntity.competences %}selected{% endif %}>
+                {{ competence.nom }}
+            </option>
+        {% endfor %}
+    </select>
+    <small class="form-text text-muted">Maintenez <strong>Shift</strong> et cliquez pour sélectionner plusieurs compétences.</small>
+</div>
 
                 <button type="submit" class="btn btn-primary mt-3 w-100">Enregistrer</button>
             </form>

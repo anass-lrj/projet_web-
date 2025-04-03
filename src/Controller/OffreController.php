@@ -9,6 +9,7 @@ use Slim\Views\Twig;
 use App\Domain\OffreDeStage;
 use App\Domain\Wishlist;
 use App\Domain\Entreprise;
+use App\Domain\Competence;
 use Doctrine\ORM\EntityManager;
 use Slim\Routing\RouteContext;
 use App\Middlewares\UserMiddleware;
@@ -33,28 +34,69 @@ class OffreController
         $app->post('/wishlist/toggle/{id}', OffreController::class . ':toggleWishlist')->setName('wishlist-toggle')->add(UserMiddleware::class);
         $app->get('/wishlist', OffreController::class . ':wishlist')->setName('wishlist')->add(UserMiddleware::class);
         $app->get('/wishlist/remove/{id}', OffreController::class . ':removeFromWishlist')->setName('wishlist-remove')->add(UserMiddleware::class);
-
+        $app->get('/competences', OffreController::class . ':manageCompetences')->setName('competence-manage')->add(UserMiddleware::class);
+        $app->post('/competences/add', OffreController::class . ':addCompetence')->setName('competence-add')->add(UserMiddleware::class);
+        $app->post('/competences/delete/{id}', OffreController::class . ':deleteCompetence')->setName('competence-delete')->add(UserMiddleware::class);
 
 
     }
 
-    public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $em = $this->container->get(EntityManager::class);
-        $offres = $em->getRepository(OffreDeStage::class)->findAll();
-        $user = $request->getAttribute('user');
-        
-        $wishlist = [];
-        if ($user) {
-            $wishlist = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Wishlist::class)->findBy(['user' => $user]));
-        }
+public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $queryParams = $request->getQueryParams();
 
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/offre-list.html.twig', [
-            'offres' => $offres,
-            'wishlist' => $wishlist,
-        ]);
+    // Récupération des filtres
+    $competenceId = $queryParams['competence'] ?? null;
+    $offreName = $queryParams['nom'] ?? null;
+    $entrepriseId = $queryParams['entreprise'] ?? null;
+
+    // Construction de la requête
+    $qb = $em->createQueryBuilder()
+        ->select('o')
+        ->from(OffreDeStage::class, 'o');
+
+    if ($competenceId) {
+        $qb->join('o.competences', 'c')
+           ->andWhere('c.id = :competenceId')
+           ->setParameter('competenceId', $competenceId);
     }
+
+    if ($offreName) {
+        $qb->andWhere('o.titre LIKE :offreName')
+           ->setParameter('offreName', '%' . $offreName . '%');
+    }
+
+    if ($entrepriseId) {
+        $qb->andWhere('o.entreprise = :entrepriseId')
+           ->setParameter('entrepriseId', $entrepriseId);
+    }
+
+    $offres = $qb->getQuery()->getResult();
+
+    // Récupération des données pour les filtres
+    $competences = $em->getRepository(Competence::class)->findAll();
+    $entreprises = $em->getRepository(Entreprise::class)->findAll();
+
+    $user = $request->getAttribute('user');
+    $wishlist = [];
+    if ($user) {
+        $wishlist = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Wishlist::class)->findBy(['user' => $user]));
+    }
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-list.html.twig', [
+        'offres' => $offres,
+        'wishlist' => $wishlist,
+        'competences' => $competences,
+        'entreprises' => $entreprises,
+        'filters' => [
+            'competence' => $competenceId,
+            'nom' => $offreName,
+            'entreprise' => $entrepriseId,
+        ],
+    ]);
+}
 
 
     public function editOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -81,38 +123,53 @@ class OffreController
         }
     }
 
-    if ($request->getMethod() === 'POST') {
-        $data = $request->getParsedBody();
+if ($request->getMethod() === 'POST') {
+    $data = $request->getParsedBody();
 
-        $offre->setTitre($data['titre'] ?? '');
-        $offre->setDescription($data['description'] ?? '');
-        $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
-        $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
-        $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
+    $offre->setTitre($data['titre'] ?? '');
+    $offre->setDescription($data['description'] ?? '');
+    $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
+    $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
+    $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
 
-        if (!empty($data['entreprise'])) {
-            $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
-            if ($entreprise) {
-                $offre->setEntreprise($entreprise);
+    if (!empty($data['entreprise'])) {
+        $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
+        if ($entreprise) {
+            $offre->setEntreprise($entreprise);
+        }
+    }
+
+    // Gestion des compétences
+    $offre->getCompetences()->clear();
+    if (!empty($data['competences']) && !in_array('null', $data['competences'])) {
+        foreach ($data['competences'] as $competenceId) {
+            $competence = $entityManager->getRepository(Competence::class)->find($competenceId);
+            if ($competence) {
+                $offre->addCompetence($competence);
             }
         }
-
-        $entityManager->persist($offre);
-        $entityManager->flush();
-
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $url = $routeParser->urlFor('offre-list');
-        return $response->withHeader('Location', $url)->withStatus(302);
     }
+
+    $entityManager->persist($offre);
+    $entityManager->flush();
+
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('offre-list');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
 
     $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
 
+    $competences = $entityManager->getRepository(Competence::class)->findAll();
+    
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/offre-edit.html.twig', [
         'offreEntity' => $offre,
         'add' => $add,
         'entreprises' => $entreprises,
+        'competences' => $competences,
     ]);
+
 }
 
 public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -226,5 +283,72 @@ public function removeFromWishlist(ServerRequestInterface $request, ResponseInte
     return $response->withHeader('Location', $url)->withStatus(302);
 }
 
+public function manageCompetences(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user');
+
+    // Vérifiez si l'utilisateur est admin ou pilote
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé !");
+        return $response->withStatus(403);
+    }
+
+    $em = $this->container->get(EntityManager::class);
+    $competences = $em->getRepository(Competence::class)->findAll();
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/competence-manage.html.twig', [
+        'competences' => $competences,
+    ]);
+}
+
+public function addCompetence(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user');
+
+    // Vérifiez si l'utilisateur est admin ou pilote
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé !");
+        return $response->withStatus(403);
+    }
+
+    $data = $request->getParsedBody();
+    $competenceName = $data['nom'] ?? '';
+
+    if (!empty($competenceName)) {
+        $em = $this->container->get(EntityManager::class);
+        $competence = new Competence($competenceName);
+        $em->persist($competence);
+        $em->flush();
+    }
+
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('competence-manage');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
+
+
+public function deleteCompetence(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user');
+
+    // Vérifiez si l'utilisateur est admin ou pilote
+    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+        $response->getBody()->write("Accès refusé !");
+        return $response->withStatus(403);
+    }
+
+    $em = $this->container->get(EntityManager::class);
+    $competence = $em->getRepository(Competence::class)->find($args['id']);
+
+    if ($competence) {
+        $em->remove($competence);
+        $em->flush();
+    }
+
+    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+    $url = $routeParser->urlFor('competence-manage');
+    return $response->withHeader('Location', $url)->withStatus(302);
+}
 
 }
