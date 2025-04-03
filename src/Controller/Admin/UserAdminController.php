@@ -28,7 +28,7 @@ class UserAdminController
    public function registerRoutes($app)
    {
     $app->group('/admin/user', function (RouteCollectorProxy $group) {
-        $group->get('/list', UserAdminController::class . ':list')->setName('user-list');
+        $group->get('/list[/{page}]', UserAdminController::class . ':list')->setName('user-list');
         $group->get('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->post('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->get('/search', UserAdminController::class . ':search')->setName('user-search');
@@ -123,36 +123,30 @@ class UserAdminController
    }
    
 
+   public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   {
+       $em = $this->container->get(EntityManager::class);
+       $session = $this->container->get('session');
+       $currentUser = $session->get('user');
+       $user = $em->getRepository(User::class)->find($args['idUser']);
 
-public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $session = $this->container->get('session');
-    $currentUser = $session->get('user');
-    $user = $em->getRepository(User::class)->find($args['idUser']);
+       if (!$user) {
+           $response->getBody()->write("Utilisateur non trouvé !");
+           return $response->withStatus(404);
+       }
 
-    // Vérification des permissions de suppression
-    if (!$user) {
-        $response->getBody()->write("Utilisateur non trouvé !");
-        return $response->withStatus(404);
-    }
+       if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
+           $response->getBody()->write("Un pilote ne peut pas supprimer un compte admin ou pilote.");
+           return $response->withStatus(403);
+       }
 
-    // Un pilote ne peut pas supprimer un compte admin ou pilote
-    if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
-        $response->getBody()->write("Un pilote ne peut pas supprimer un compte admin ou pilote.");
-        return $response->withStatus(403); // Forbidden
-    }
+       $em->remove($user);
+       $em->flush();
 
-    if ($user) {
-        $em->remove($user);
-        $em->flush();
-    }
-
-    // Redirection après suppression
-    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-    $url = $routeParser->urlFor('user-list');
-    return $response->withHeader('Location', $url)->withStatus(302);
-}
+       $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+       $url = $routeParser->urlFor('user-list');
+       return $response->withHeader('Location', $url)->withStatus(302);
+   }
 
 
 public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -168,13 +162,25 @@ public function list(ServerRequestInterface $request, ResponseInterface $respons
                      ->setParameter('role', $role);
     }
 
+    // Pagination
+    $page = isset($args['page']) ? (int)$args['page'] : 1;
+    $limit = 10;
+    $offset = ($page - 1) * $limit;
+
+    $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
     $users = $queryBuilder->getQuery()->getResult();
+
+    // Récupérer le nombre total d'utilisateurs
+    $totalUsers = $em->getRepository(User::class)->count([]);
+    $totalPages = ceil($totalUsers / $limit);
 
     $view = Twig::fromRequest($request);
 
     return $view->render($response, 'Admin/User/user-list.html.twig', [
         'users' => $users,
-        'selectedRole' => $role, // Permet de garder la sélection active dans le formulaire
+        'selectedRole' => $role,
+        'currentPage' => $page,
+        'totalPages' => $totalPages,
     ]);
 }
 
