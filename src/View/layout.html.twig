@@ -210,9 +210,9 @@
                 aria-expanded="false"
               >
                 {% if currentUser is not null %}
-                    <span id="userDropdownText">{{ currentUser.prenom }}</span>
+                    <span id="userDropdownText" class="bi bi-person-circle"> {{ currentUser.prenom }}</span>
                 {% else %}
-                    <span id="userDropdownText">Utilisateur</span>
+                    <span id="userDropdownText" class="bi bi-person-circle"> Utilisateur</span>
                 {% endif %}
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
