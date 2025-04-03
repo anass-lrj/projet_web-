@@ -1,0 +1,18 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Noter l'entreprise : {{ entreprise.titre }}</h1>
+    <form method="POST" action="{{ url_for('entreprise-note', {id: entreprise.id}) }}">
+        <div class="mb-3">
+            <label for="note" class="form-label">Note (entre 0 et 20)</label>
+            <input type="number" id="note" name="note" class="form-control" min="0" max="20" step="0.1" required>
+        </div>
+        <div class="mb-3">
+            <label for="commentaire" class="form-label">Commentaire</label>
+            <textarea id="commentaire" name="commentaire" class="form-control" rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Soumettre</button>
+    </form>
+</div>
+{% endblock %}

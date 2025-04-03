@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Doctrine\ORM\EntityManager;
 use App\Middlewares\UserMiddleware;
 use App\Domain\Domaine;
+use App\Domain\Evaluation;
 
 class EntrepriseController
 {
@@ -31,7 +32,9 @@ class EntrepriseController
         $app->post('/entreprises/add', EntrepriseController::class . ':editEntreprise')->add(UserMiddleware::class);
         $app->get('/entreprises/delete/{id}', EntrepriseController::class . ':delete')->setName('entreprise-delete')->add(UserMiddleware::class);
         $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu')->add(UserMiddleware::class);
-    }
+        $app->get('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->setName('entreprise-note')->add(UserMiddleware::class);
+        $app->post('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->add(UserMiddleware::class);
+}
 
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -94,7 +97,7 @@ class EntrepriseController
         'add' => $add,
         'domaines' => $domaines, 
     ]);
-}
+    }
 
 
     private function getEntrepriseById($id): ?Entreprise
@@ -207,5 +210,64 @@ class EntrepriseController
             'entrepriseEntity' => $entreprise,
             'offres' => $offres,
         ]);
+    }
+    
+    public function noterEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $entityManager = $this->container->get(EntityManager::class);
+    
+        // Récupérer l'entreprise par son ID
+        $id = $args['id'];
+        $entreprise = $entityManager->getRepository(Entreprise::class)->find($id);
+    
+        if (!$entreprise) {
+            $response->getBody()->write('Entreprise non trouvée.');
+            return $response->withStatus(404);
         }
+    
+        if ($request->getMethod() === 'POST') {
+            $data = $request->getParsedBody();
+            $note = isset($data['note']) ? (float) $data['note'] : null;
+            $commentaire = $data['commentaire'] ?? null;
+    
+            // Vérifier que la note est valide
+            if ($note === null || $note < 0 || $note > 20) {
+                $response->getBody()->write('Note invalide. Elle doit être comprise entre 0 et 20.');
+                return $response->withStatus(400);
+            }
+    
+            // Ajouter une nouvelle évaluation
+            $evaluation = new Evaluation();
+            $evaluation->setEntreprise($entreprise); // Associer l'entreprise à l'évaluation
+            $evaluation->setNote($note);
+            $evaluation->setCommentaire($commentaire);
+            $evaluation->setCreatedAt(new \DateTime());
+    
+            $entityManager->persist($evaluation);
+    
+            // Recalculer la moyenne des évaluations
+            $totalNotes = 0;
+            $evaluations = $entityManager->getRepository(Evaluation::class)->findBy(['entreprise' => $entreprise]);
+    
+            foreach ($evaluations as $eval) {
+                $totalNotes += $eval->getNote();
+            }
+    
+            $evaluationMoyenne = count($evaluations) > 0 ? $totalNotes / count($evaluations) : null;
+            $entreprise->setEvaluationMoyenne($evaluationMoyenne);
+    
+            $entityManager->flush();
+    
+            // Rediriger vers la liste des entreprises
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $url = $routeParser->urlFor('entreprises-list');
+            return $response->withHeader('Location', $url)->withStatus(302);
+        }
+    
+        // Afficher le formulaire de notation
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'entreprise-note.html.twig', [
+            'entreprise' => $entreprise,
+        ]);
+    }
 }
