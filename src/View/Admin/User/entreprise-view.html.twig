@@ -15,23 +15,43 @@
                 <p><strong>Description :</strong> {{ entrepriseEntity.description }}</p>
                 <p><strong>Contact Téléphone :</strong> {{ entrepriseEntity.contactTelephone }}</p>
                 <p><strong>Nombre de Stagiaires :</strong> {{ entrepriseEntity.nombreStagiaires }}</p>
-                <p><strong>Évaluation Moyenne :</strong> {{ entrepriseEntity.evaluationMoyenne }}</p>
+                <p><strong>Évaluation Moyenne :</strong></p>
+                <p>
+                    {% set evaluationSur5 = entrepriseEntity.evaluationMoyenne / 4 %}
+                    {% for i in 1..5 %}
+                        {% if i <= evaluationSur5 %}
+                            <i class="bi bi-star-fill" style="color: gold;"></i>
+                        {% elseif i - 0.5 <= evaluationSur5 %}
+                            <i class="bi bi-star-half" style="color: gold;"></i>
+                        {% else %}
+                            <i class="bi bi-star" style="color: gold;"></i>
+                        {% endif %}
+                    {% endfor %}
+                </p>
             </div>
             <div class="card-footer text-center">
-                <a href="{{ url_for('entreprises-list') }}" class="btn" style="background-color: #78866B; color: white;">Retour à la liste des entreprises</a>
+                <a href="{{ url_for('entreprises-list') }}" class="btn bi bi-arrow-return-left" style="background-color: #78866B; color: white;">  Retour à la liste des entreprises</a>
             </div>
         </div>
         <div class="mt-5">
         <pre>{{ dump(OffreDeStage) }}</pre>
             <h2>Offres liées à cette entreprise</h2>
             {% if offres is not empty %}
-                <div class="list-group">
+                <div class="row">
                     {% for offre in offres %}
-                        <a href="{{ url_for('offre-view', {id: offre.id}) }}" class="list-group-item list-group-item-action">
-                            <h5 class="mb-1">{{ offre.titre }}</h5>
-                            <p class="mb-1">{{ offre.description|slice(0, 100) }}...</p>
-                            <small>Publié le : {{ offre.dateCreation|date('d/m/Y') }}</small>
-                        </a>
+                        <div class="col-md-4">
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ offre.titre }}</h5>
+                                    <p class="card-text"><strong>Description :</strong> {{ offre.description|slice(0, 100) }}...</p>
+                                    <p class="card-text"><strong>Durée :</strong> {{ offre.duree|default('Non spécifiée') }} mois</p>
+                                    <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if loop.index is divisible by(3) %}
+                            </div><div class="row">
+                        {% endif %}
                     {% endfor %}
                 </div>
             {% else %}
