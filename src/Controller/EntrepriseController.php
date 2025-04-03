@@ -86,14 +86,13 @@ class EntrepriseController
         return $response->withHeader('Location', $url)->withStatus(302);
     }
 
-    // 🔥 Correction : Récupération des domaines pour les afficher dans le select
     $domaines = $entityManager->getRepository(Domaine::class)->findAll();
 
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/entreprise-edit.html.twig', [
         'entrepriseEntity' => $entreprise,
         'add' => $add,
-        'domaines' => $domaines, // 🔥 On passe les domaines à la vue !
+        'domaines' => $domaines, 
     ]);
 }
 
@@ -202,12 +201,12 @@ class EntrepriseController
         // Récupérer les offres associées à cette entreprise
         $offres = $entreprise->getOffresDeStage();
 
-        // Affichage de la vue avec les détails de l'entreprise
-        $view = Twig::fromRequest($request);
-        return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
-            'entrepriseEntity' => $entreprise,
-            'offres' => $offres,
-        ]);
-    }
+    // Affichage de la vue avec les détails de l'entreprise
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
+        'entrepriseEntity' => $entreprise
+    ]);
+}
+   
 }
 
