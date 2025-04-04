@@ -27,7 +27,7 @@ class OffreController
 
     public function registerRoutes($app)
     {
-        $app->get('/offres', OffreController::class . ':listOffres')->setName('offre-list')->add(UserMiddleware::class);
+        $app->get('/offres', OffreController::class . ':list')->setName('offre-list')->add(UserMiddleware::class);
         $app->get('/offres/edit/{id}', OffreController::class . ':editOffre')->setName('offre-edit')->add(UserMiddleware::class);
         $app->post('/offres/edit/{id}', OffreController::class . ':editOffre')->add(UserMiddleware::class);
         $app->get('/offres/add', OffreController::class . ':editOffre')->setName('offre-add')->add(UserMiddleware::class);
@@ -39,35 +39,79 @@ class OffreController
         $app->get('/competences', OffreController::class . ':manageCompetences')->setName('competence-manage')->add(UserMiddleware::class);
         $app->post('/competences/add', OffreController::class . ':addCompetence')->setName('competence-add')->add(UserMiddleware::class);
         $app->post('/competences/delete/{id}', OffreController::class . ':deleteCompetence')->setName('competence-delete')->add(UserMiddleware::class);
+        $app->get('/offres/list[/{page}]', OffreController::class . ':list')->setName('offre-paginated-list')->add(UserMiddleware::class);
         $app->get('/offres/postuler/{id}', OffreController::class . ':postuler')->setName('offre-postuler')->add(UserMiddleware::class);
         $app->get('/offres/details/{id}', OffreController::class . ':details')->setName('offre-details')->add(UserMiddleware::class);
         $app->post('/offres/postuler/{id}', OffreController::class . ':soumettreCandidature')->setName('offre-postuler-submit')->add(UserMiddleware::class);
     }
 
-public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $queryParams = $request->getQueryParams();
 
-    // Récupération des filtres
-    $competenceId = $queryParams['competence'] ?? null;
-    $offreName = $queryParams['nom'] ?? null;
-    $entrepriseId = $queryParams['entreprise'] ?? null;
 
-    // Construction de la requête
-    $qb = $em->createQueryBuilder()
-        ->select('o')
-        ->from(OffreDeStage::class, 'o');
-
-    if ($competenceId) {
-        $qb->join('o.competences', 'c')
-           ->andWhere('c.id = :competenceId')
-           ->setParameter('competenceId', $competenceId);
+    public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        return $this->list($request, $response, $args);
     }
 
-    if ($offreName) {
-        $qb->andWhere('o.titre LIKE :offreName')
-           ->setParameter('offreName', '%' . $offreName . '%');
+
+    public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $em = $this->container->get(EntityManager::class);
+        $queryParams = $request->getQueryParams();
+    
+        // Récupération des filtres
+        $competenceId = $queryParams['competence'] ?? null;
+        $offreName = $queryParams['nom'] ?? null;
+        $entrepriseId = $queryParams['entreprise'] ?? null;
+    
+        // Construction de la requête
+        $queryBuilder = $em->getRepository(OffreDeStage::class)->createQueryBuilder('o');
+    
+        if ($competenceId) {
+            $queryBuilder->join('o.competences', 'c')
+                         ->andWhere('c.id = :competenceId')
+                         ->setParameter('competenceId', $competenceId);
+        }
+    
+        if ($offreName) {
+            $queryBuilder->andWhere('o.titre LIKE :offreName')
+                         ->setParameter('offreName', '%' . $offreName . '%');
+        }
+    
+        if ($entrepriseId) {
+            $queryBuilder->andWhere('o.entreprise = :entrepriseId')
+                         ->setParameter('entrepriseId', $entrepriseId);
+        }
+    
+        // Pagination
+        $page = isset($args['page']) ? (int)$args['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+    
+        $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
+        $offres = $queryBuilder->getQuery()->getResult();
+    
+        // Récupérer le nombre total d'offres
+        $totalOffres = $em->getRepository(OffreDeStage::class)->count([]);
+        $totalPages = ceil($totalOffres / $limit);
+    
+        // Récupération des données pour les filtres
+        $competences = $em->getRepository(Competence::class)->findAll();
+        $entreprises = $em->getRepository(Entreprise::class)->findAll();
+    
+        $view = Twig::fromRequest($request);
+    
+        return $view->render($response, 'Admin/User/offre-list.html.twig', [
+            'offres' => $offres,
+            'competences' => $competences,
+            'entreprises' => $entreprises,
+            'filters' => [
+                'competence' => $competenceId,
+                'nom' => $offreName,
+                'entreprise' => $entrepriseId,
+            ],
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+        ]);
     }
 
     if ($entrepriseId) {
@@ -377,6 +421,7 @@ public function postuler(ServerRequestInterface $request, ResponseInterface $res
     ]);
 }
 
+
 public function details(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
     $em = $this->container->get(EntityManager::class);
@@ -397,6 +442,14 @@ public function details(ServerRequestInterface $request, ResponseInterface $resp
     return $view->render($response, 'Admin/User/offre-details.html.twig', [
         'offre' => $offre,
         'candidatures' => $candidatures, // Passer les candidatures à la vue
+    // Compter le nombre de candidatures associées à cette offre
+    $nombreCandidatures = $em->getRepository(Candidature::class)->count(['offre' => $offre]);
+
+    // Rendre la vue Twig pour afficher les détails de l'offre
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-details.html.twig', [
+        'offre' => $offre,
+        'nombreCandidatures' => $nombreCandidatures, // Transmettre le nombre de candidatures à la vue
     ]);
 }
 

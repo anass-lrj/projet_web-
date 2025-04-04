@@ -59,10 +59,7 @@
                             <a href="{{ url_for('entreprise-edit', {id: entreprise.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
                             <a href="{{ url_for('entreprise-delete', {id: entreprise.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')"> Supprimer</a>
                         {% endif %}
-                        {% if user.role == 'user' %}
-                        <a href="{{ url_for('entreprise-note', {id: entreprise.id}) }}" class="btn btn-secondary bi bi-pencil"> Noter cette entreprise</a>                        
-                        {% endif %}
-                    </div>
+                        <a href="{{ url_for('entreprise-note', {id: entreprise.id}) }}" class="btn btn-warning bi bi-star-fill mt-2"> Noter cette entreprise</a>                    </div>
                 </div>
             </div>
         {% else %}
@@ -71,13 +68,28 @@
     </div>
 
     <!-- Pagination -->
-    <div class="pagination">
-        {% if currentPage > 1 %}
-            <a href="{{ url_for('entreprise-paginatedList', {page: currentPage - 1}) }}" class="btn btn-link">Précédent</a>
-        {% endif %}
-        {% if currentPage < totalPages %}
-            <a href="{{ url_for('entreprise-paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
-        {% endif %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul class="pagination">
+                {% if currentPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('entreprises-list', {page: currentPage - 1}) }}">Précédent</a>
+                    </li>
+                {% endif %}
+                
+                {% for page in 1..totalPages %}
+                    <li class="page-item {% if page == currentPage %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('entreprises-list', {page: page}) }}">{{ page }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if currentPage < totalPages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('entreprises-list', {page: currentPage + 1}) }}">Suivant</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 
 </div>

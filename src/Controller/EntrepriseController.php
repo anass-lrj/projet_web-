@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManager;
 use App\Middlewares\UserMiddleware;
 use App\Domain\Domaine;
 use App\Domain\Evaluation;
+use App\Domain\Candidature;
 
 class EntrepriseController
 {
@@ -25,7 +26,6 @@ class EntrepriseController
 
     public function registerRoutes($app)
     {
-        $app->get('/entreprises', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list')->add(UserMiddleware::class);
         $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprise-edit')->add(UserMiddleware::class);
         $app->post('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->add(UserMiddleware::class);
         $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add')->add(UserMiddleware::class);
@@ -34,7 +34,10 @@ class EntrepriseController
         $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu')->add(UserMiddleware::class);
         $app->get('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->setName('entreprise-note')->add(UserMiddleware::class);
         $app->post('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->add(UserMiddleware::class);
-}
+        $app->get('/entreprises[/{page}]', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list')->add(UserMiddleware::class);        
+
+
+    }
 
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -154,17 +157,26 @@ class EntrepriseController
         // Appliquer le filtrage par domaine si un domaine est sélectionné
         if (!empty($domaineId)) {
             $qb->andWhere('e.domaine = :domaine')
-            ->setParameter('domaine', $domaineId);
+                ->setParameter('domaine', $domaineId);
         }
 
         // Appliquer la recherche par nom si une requête est donnée
         if (!empty($searchQuery)) {
             $qb->andWhere('e.titre LIKE :search')
-            ->setParameter('search', '%' . $searchQuery . '%');
+                ->setParameter('search', '%' . $searchQuery . '%');
         }
 
-        // Exécuter la requête
+        // Pagination
+        $page = isset($args['page']) ? (int)$args['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $qb->setMaxResults($limit)->setFirstResult($offset);
         $entreprises = $qb->getQuery()->getResult();
+
+        // Récupérer le nombre total d'entreprises
+        $totalEntreprises = $em->getRepository(Entreprise::class)->count([]);
+        $totalPages = ceil($totalEntreprises / $limit);
 
         // Récupérer tous les domaines pour le filtre
         $domaines = $em->getRepository(Domaine::class)->findAll();
@@ -180,37 +192,50 @@ class EntrepriseController
             'selectedDomaine' => $domaineId,
             'searchQuery' => $searchQuery,
             'user' => $user,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
         ]);
     }
 
+
+  
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $entityManager = $this->container->get(EntityManager::class);
-
+    
         // Vérifie si l'ID est fourni
         if (!isset($args['id'])) {
             $response->getBody()->write("ID d'entreprise non fourni !");
             return $response->withStatus(400);
         }
-
+    
         // Recherche de l'entreprise
         $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-
+    
         if (!$entreprise) {
             $response->getBody()->write("Entreprise non trouvée !");
             return $response->withStatus(404);
         }
-
+    
         // Récupérer les offres associées à cette entreprise
         $offres = $entreprise->getOffresDeStage();
- 
+    
+        // Calculer le nombre total de candidatures pour toutes les offres
+        $nombreTotalCandidatures = 0;
+        foreach ($offres as $offre) {
+            $nombreTotalCandidatures += $entityManager->getRepository(Candidature::class)->count(['offre' => $offre]);
+        }
+    
         // Affichage de la vue avec les détails de l'entreprise
         $view = Twig::fromRequest($request);
         return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
             'entrepriseEntity' => $entreprise,
             'offres' => $offres,
+            'nombreOffres' => count($offres), // Nombre d'offres
+            'nombreTotalCandidatures' => $nombreTotalCandidatures, // Nombre total de candidatures
         ]);
     }
+
     
     public function noterEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {

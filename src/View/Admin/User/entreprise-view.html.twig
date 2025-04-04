@@ -14,7 +14,9 @@
                 <p><strong>Ville :</strong> {{ entrepriseEntity.ville }}</p>
                 <p><strong>Description :</strong> {{ entrepriseEntity.description }}</p>
                 <p><strong>Contact Téléphone :</strong> {{ entrepriseEntity.contactTelephone }}</p>
-                <p><strong>Nombre de Stagiaires :</strong> {{ entrepriseEntity.nombreStagiaires }}</p>
+                <p><strong>Nombre d'offres :</strong> {{ nombreOffres }}</p>
+                            <p><strong>Nombre total de candidatures :</strong> {{ nombreTotalCandidatures }}</p>
+
                 <p><strong>Évaluation Moyenne :</strong></p>
                 <p>
                     {% set evaluationSur5 = entrepriseEntity.evaluationMoyenne / 4 %}
@@ -45,6 +47,10 @@
                                     <p class="card-text"><strong>Description :</strong> {{ offre.description|slice(0, 100) }}...</p>
                                     <p class="card-text"><strong>Durée :</strong> {{ offre.duree|default('Non spécifiée') }} mois</p>
                                     <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
+
+                                       <a href="{{ url_for('offre-details', {'id': offre.id}) }}" class="btn btn-secondary">
+                            <i class="bi bi-eye"></i> Aperçu
+                        </a>
                                 </div>
                             </div>
                         </div>

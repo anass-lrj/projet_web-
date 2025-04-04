@@ -19,23 +19,6 @@
         </div>
     </form>
 
-    <form method="GET" action="{{ url_for('user-list') }}" class="mb-4">
-    <div class="row">
-        <div class="col-md-4">
-            <select name="role" class="form-control">
-                <option value="">Tous les rôles</option>
-                <option value="admin" {% if selectedRole == 'admin' %}selected{% endif %}>Admin</option>
-                <option value="pilote" {% if selectedRole == 'pilote' %}selected{% endif %}>Pilote</option>
-                <option value="user" {% if selectedRole == 'user' %}selected{% endif %}>Utilisateur</option>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <button type="submit" class="btn btn-primary">Filtrer</button>
-        </div>
-    </div>
-</form>
-
-
     <div class="row">
         {% for user in users %}
             <div class="col-md-4">
@@ -46,28 +29,30 @@
                         <p class="card-text"><strong>Date de naissance :</strong> {{ user.dateNaissance|date('d/m/Y') }}</p>
                         <p class="card-text"><strong>Date d'inscription :</strong> {{ user.dateCreation|date('d/m/Y H:i:s') }}</p>
                         <p class="card-text"><strong>Rôle :</strong> {{ user.role }}</p>
+                                        <p class="card-text">Nombre de candidatures {{ userCandidatures[user.id]|default(0) }}</p> 
+
+
 
                         {% if currentUser.role == 'admin' %}
-                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
-                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')"> Supprimer</a>
+                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary">Modifier</a>
+                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
                         {% elseif currentUser.role == 'pilote' and user.role == 'user' %}
-                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
-                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
+                            <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary">Modifier</a>
+                            <a href="{{ url_for('user-delete', {idUser: user.id}) }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
-</div>
 
-
-    <div class="pagination">
+    <div class="pagination d-flex justify-content-center mt-4">
         {% if currentPage > 1 %}
-            <a href="{{ url_for('paginatedList', {page: currentPage - 1}) }}" class="btn btn-link">Précédent</a>
+            <a href="{{ url_for('user-list', {page: currentPage - 1}) }}" class="btn btn-outline-primary mx-2">Précédent</a>
         {% endif %}
+        <span class="align-self-center">Page {{ currentPage }} sur {{ totalPages }}</span>
         {% if currentPage < totalPages %}
-            <a href="{{ url_for('paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
+            <a href="{{ url_for('user-list', {page: currentPage + 1}) }}" class="btn btn-outline-primary mx-2">Suivant</a>
         {% endif %}
     </div>
 </div>

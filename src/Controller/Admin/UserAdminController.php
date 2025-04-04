@@ -15,6 +15,7 @@ use App\Domain\User;
 use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Routing\RouteCollectorProxy;
+use App\Domain\Candidature;
 
 class UserAdminController
 {
@@ -28,7 +29,7 @@ class UserAdminController
    public function registerRoutes($app)
    {
     $app->group('/admin/user', function (RouteCollectorProxy $group) {
-        $group->get('/list', UserAdminController::class . ':list')->setName('user-list');
+        $group->get('/list[/{page}]', UserAdminController::class . ':list')->setName('user-list');
         $group->get('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->post('/edit/{idUser}', UserAdminController::class . ':edit')->setName('user-edit');
         $group->get('/search', UserAdminController::class . ':search')->setName('user-search');
@@ -60,7 +61,9 @@ class UserAdminController
        } else {
            $user = new User('', '', new \DateTime(), '', '', '');
        }
-   
+       
+  
+
        // Vérification que le pilote ne peut pas modifier les comptes admin ou pilote
        if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
            $response->getBody()->write("Un pilote ne peut pas modifier un compte admin ou pilote.");
@@ -123,81 +126,77 @@ class UserAdminController
    }
    
 
-
-public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $session = $this->container->get('session');
-    $currentUser = $session->get('user');
-    $user = $em->getRepository(User::class)->find($args['idUser']);
-
-    // Vérification des permissions de suppression
-    if (!$user) {
-        $response->getBody()->write("Utilisateur non trouvé !");
-        return $response->withStatus(404);
-    }
-
-    // Un pilote ne peut pas supprimer un compte admin ou pilote
-    if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
-        $response->getBody()->write("Un pilote ne peut pas supprimer un compte admin ou pilote.");
-        return $response->withStatus(403); // Forbidden
-    }
-
-    if ($user) {
-        $em->remove($user);
-        $em->flush();
-    }
-
-    // Redirection après suppression
-    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-    $url = $routeParser->urlFor('user-list');
-    return $response->withHeader('Location', $url)->withStatus(302);
-}
-
-
-public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $queryParams = $request->getQueryParams();
-    $role = $queryParams['role'] ?? null;
-
-    $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
-
-    if (!empty($role)) {
-        $queryBuilder->where('u.role = :role')
-                     ->setParameter('role', $role);
-    }
-
-    $users = $queryBuilder->getQuery()->getResult();
-
-    $view = Twig::fromRequest($request);
-
-    return $view->render($response, 'Admin/User/user-list.html.twig', [
-        'users' => $users,
-        'selectedRole' => $role, // Permet de garder la sélection active dans le formulaire
-    ]);
-}
-
-
-
-   public function paginatedList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
    {
-        $em = $this->container->get(EntityManager::class);
-        $page = (int)($args['page'] ?? 1);
-        $limit = 10;
-        $offset = ($page - 1) * $limit;
+       $em = $this->container->get(EntityManager::class);
+       $session = $this->container->get('session');
+       $currentUser = $session->get('user');
+       $user = $em->getRepository(User::class)->find($args['idUser']);
 
-        $users = $em->getRepository(User::class)->findBy([], null, $limit, $offset);
-        $totalUsers = $em->getRepository(User::class)->count([]);
+       if (!$user) {
+           $response->getBody()->write("Utilisateur non trouvé !");
+           return $response->withStatus(404);
+       }
 
-        $view = Twig::fromRequest($request);
+       if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
+           $response->getBody()->write("Un pilote ne peut pas supprimer un compte admin ou pilote.");
+           return $response->withStatus(403);
+       }
 
-        return $view->render($response, 'Admin/User/user-list.html.twig', [
-            'users' => $users,
-            'currentPage' => $page,
-            'totalPages' => ceil($totalUsers / $limit),
-        ]);
+       $em->remove($user);
+       $em->flush();
+
+       $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+       $url = $routeParser->urlFor('user-list');
+       return $response->withHeader('Location', $url)->withStatus(302);
    }
+
+
+   public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   {
+       $em = $this->container->get(EntityManager::class);
+       $queryParams = $request->getQueryParams();
+       $role = $queryParams['role'] ?? null;
+   
+       $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+   
+       if (!empty($role)) {
+           $queryBuilder->where('u.role = :role')
+                        ->setParameter('role', $role);
+       }
+   
+       // Pagination
+       $page = isset($args['page']) ? (int)$args['page'] : 1;
+       $limit = 10;
+       $offset = ($page - 1) * $limit;
+   
+       $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
+       $users = $queryBuilder->getQuery()->getResult();
+   
+       // Récupérer le nombre total d'utilisateurs
+       $totalUsers = $em->getRepository(User::class)->count([]);
+       $totalPages = ceil($totalUsers / $limit);
+   
+       // Récupérer le nombre de candidatures pour chaque utilisateur
+       $userCandidatures = [];
+       foreach ($users as $user) {
+           $userCandidatures[$user->getId()] = $em->getRepository(Candidature::class)->count(['user' => $user]);
+       }
+   
+       $view = Twig::fromRequest($request);
+   
+       return $view->render($response, 'Admin/User/user-list.html.twig', [
+           'users' => $users,
+           'userCandidatures' => $userCandidatures, // Transmettre les candidatures à la vue
+           'selectedRole' => $role,
+           'currentPage' => $page,
+           'totalPages' => $totalPages,
+       ]);
+   }
+
+
+
+  
 
    public function search(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
