@@ -19,10 +19,11 @@
                     <input type="text" class="form-control" id="prenom" name="prenom" value="{{ userEntity.prenom }}" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
-                </div>
+           <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ userEntity.email }}" required>
+        <small class="form-text text-muted">Entrez une adresse email valide.</small>
+    </div>
 
                 <div class="form-group">
                     <label for="password">Mot de passe</label>

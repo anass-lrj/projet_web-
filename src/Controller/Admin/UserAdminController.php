@@ -60,7 +60,9 @@ class UserAdminController
        } else {
            $user = new User('', '', new \DateTime(), '', '', '');
        }
-   
+       
+  
+
        // Vérification que le pilote ne peut pas modifier les comptes admin ou pilote
        if ($currentUser->getRole() === 'pilote' && in_array($user->getRole(), ['admin', 'pilote'])) {
            $response->getBody()->write("Un pilote ne peut pas modifier un compte admin ou pilote.");
