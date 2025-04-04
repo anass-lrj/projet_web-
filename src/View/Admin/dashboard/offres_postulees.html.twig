@@ -1,0 +1,51 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h4">Vos Offres Postulées</h2>
+        </div>
+        <div class="card-body">
+            {% if candidatures is not empty %}
+                <ul class="list-group">
+                    {% for candidature in candidatures %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <!-- Titre de l'offre -->
+                                <strong>{{ candidature.offre.titre }}</strong><br>
+                                <span>{{ candidature.offre.description }}</span><br>
+                                <small class="text-muted">Postulé le : {{ candidature.datePostulation|date('d/m/Y') }}</small><br>
+                                <!-- Lien vers la page de l'entreprise -->
+                                <small>
+                                    <a href="{{ url_for('entreprise-details', {'id': candidature.offre.entreprise.id}) }}" class="text-decoration-none">
+                                        {{ candidature.offre.entreprise.nom }}
+                                    </a>
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('entreprise-aperçu', {'id': candidature.offre.entreprise.id}) }}" class="btn btn-primary btn-sm ms-2">
+                                    <i class="bi bi-eye"></i> Entreprise
+                                </a>
+                                <!-- Bouton Aperçu -->
+                                <a href="{{ url_for('offre-details', {'id': candidature.offre.id}) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> offre
+                                </a>
+                                <!-- Bouton Supprimer -->
+                                <a href="{{ url_for('supprimer_candidature', {'id': candidature.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?')">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </a>
+                                
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    Vous n'avez postulé à aucune offre pour le moment.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
