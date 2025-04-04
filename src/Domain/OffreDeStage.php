@@ -3,6 +3,8 @@
 namespace App\Domain;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity, ORM\Table(name: 'offre_de_stage')]
 class OffreDeStage
@@ -32,6 +34,13 @@ class OffreDeStage
     #[ORM\JoinColumn(name: 'entreprise_id', referencedColumnName: 'id', nullable: false)]
     private Entreprise $entreprise;
 
+    #[ORM\OneToMany(mappedBy: 'offre', targetEntity: Wishlist::class, cascade: ['persist', 'remove'])]
+    private Collection $wishlists;
+
+    #[ORM\ManyToMany(targetEntity: Competence::class, inversedBy: 'offres', cascade: ['persist'])]
+#[ORM\JoinTable(name: 'offre_competence')]
+private Collection $competences;
+
     public function __construct(
         string $titre,
         string $description,
@@ -39,6 +48,7 @@ class OffreDeStage
         \DateTime $dateFin,
         float $remuneration,
         Entreprise $entreprise
+        
     ) {
         $this->titre = $titre;
         $this->description = $description;
@@ -47,6 +57,10 @@ class OffreDeStage
         $this->remuneration = $remuneration;
         $this->entreprise = $entreprise;
         $this->dateCreation = new \DateTimeImmutable();
+        $this->wishlists = new ArrayCollection();
+        $this->competences = new ArrayCollection();
+
+
     }
 
     public function getId(): int
@@ -124,4 +138,29 @@ class OffreDeStage
         $this->entreprise = $entreprise;
         return $this;
     }
+    public function getWishlist(): Collection { return $this->wishlist; }
+
+    public function getCompetences(): Collection
+    {
+        return $this->competences;
+    }
+    
+    public function addCompetence(Competence $competence): self
+    {
+        if (!$this->competences->contains($competence)) {
+            $this->competences->add($competence);
+            $competence->getOffres()->add($this);
+        }
+        return $this;
+    }
+    
+    public function removeCompetence(Competence $competence): self
+    {
+        if ($this->competences->contains($competence)) {
+            $this->competences->removeElement($competence);
+            $competence->getOffres()->removeElement($this);
+        }
+        return $this;
+    }
 }
+

@@ -2,7 +2,47 @@
 
 {% block content %}
 <div class="container mt-4">
-    <a href="{{ url_for('offre-add') }}" class="btn btn-primary mb-4">Ajouter une offre</a>
+   
+        <a href="{{ url_for('offre-add') }}" class="btn btn-primary mb-4">Ajouter une offre</a>
+        <a href="{{ url_for('competence-manage') }}" class="btn btn-secondary">Gérer les Compétences</a>
+
+    <h2 class="mb-4">Liste des offres</h2>
+
+
+<form method="GET" action="{{ url_for('offre-list') }}" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="competence">Compétence</label>
+                <select id="competence" name="competence" class="form-control">
+                    <option value="">Toutes</option>
+                    {% for competence in competences %}
+                        <option value="{{ competence.id }}" {% if filters.competence == competence.id %}selected{% endif %}>
+                            {{ competence.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="nom">Nom de l'offre</label>
+                <input type="text" id="nom" name="nom" class="form-control" value="{{ filters.nom|default('') }}" placeholder="Rechercher par nom">
+            </div>
+            <div class="col-md-4">
+                <label for="entreprise">Entreprise</label>
+                <select id="entreprise" name="entreprise" class="form-control">
+                    <option value="">Toutes</option>
+                    {% for entreprise in entreprises %}
+                        <option value="{{ entreprise.id }}" {% if filters.entreprise == entreprise.id %}selected{% endif %}>
+                            {{ entreprise.titre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <a href="{{ url_for('offre-list') }}" class="btn btn-secondary">Réinitialiser</a>
+        </div>
+    </form>
 
     <div class="row">
         {% for offre in offres %}
@@ -14,23 +54,58 @@
                         <p class="card-text"><strong>Ville :</strong> {{ offre.ville|default('Non spécifiée') }}</p>
                         <p class="card-text"><strong>Durée :</strong> {{ offre.duree }} mois</p>
                         <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
+<<<<<<< HEAD
                         {% if user.role == 'admin' or user.role == 'pilote' %}
                             <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
                             <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
                         {% endif %}
+=======
+                       
+ <p class="card-text"><strong>Compétences recherchées :</strong></p>
+                        <ul>
+                            {% for competence in offre.competences %}
+                                <li>{{ competence.nom }}</li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{{ url_for('offre-details', {'id': offre.id}) }}" class="btn btn-secondary">
+                            <i class="bi bi-eye"></i> Aperçu
+                        </a>
+                        <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
+                        <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
+                        <form method="POST" action="{{ url_for('wishlist-toggle', {id: offre.id}) }}" class="d-inline">
+                        
+                            <button type="submit" class="btn {% if offre.id in wishlist %}btn-warning{% else %}btn-outline-warning{% endif %} bi bi-heart">
+                                {% if offre.id in wishlist %} Retirer de la Wishlist {% else %} Ajouter à la Wishlist {% endif %}
+                            </button>
+                        </form>
+>>>>>>> 729c4250b94f36529aad51d09d1017cb590fcd88
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
 
-    <div class="pagination">
-        {% if currentPage > 1 %}
-            <a href="{{ url_for('offre-paginatedList', {page: currentPage - 1}) }}" class="btn btn-link">Précédent</a>
-        {% endif %}
-        {% if currentPage < totalPages %}
-            <a href="{{ url_for('offre-paginatedList', {page: currentPage + 1}) }}" class="btn btn-link">Suivant</a>
-        {% endif %}
-    </div>
+  <!-- Pagination -->
+    <nav>
+        <ul class="pagination">
+            {% if currentPage > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('offre-paginated-list', {page: currentPage - 1}) }}">Précédent</a>
+                </li>
+            {% endif %}
+
+            {% for page in 1..totalPages %}
+                <li class="page-item {% if page == currentPage %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('offre-paginated-list', {page: page}) }}">{{ page }}</a>
+                </li>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('offre-paginated-list', {page: currentPage + 1}) }}">Suivant</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
 {% endblock %}

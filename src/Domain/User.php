@@ -47,6 +47,9 @@ class User
     #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: "users", cascade: ["persist", "remove"])]
     #[ORM\JoinTable(name: "user_promotion")]
     private Collection $promotions;
+   
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Wishlist::class, cascade: ['persist', 'remove'])]
+    private Collection $wishlist;
 
     public function __construct(string $prenom, string $nom, \DateTime $dateNaissance, string $email, string $motDePasse, string $role)
     {
@@ -59,6 +62,8 @@ class User
         $this->motDePasse = password_hash($motDePasse, PASSWORD_DEFAULT);
         $this->dateCreation = new \DateTimeImmutable('now');
         $this->role = $role;
+        $this->wishlist = new ArrayCollection();
+
     }
 
     public function getId(): int { return $this->id; }
@@ -96,6 +101,8 @@ class User
 
         return $this;
     }
+    public function getWishlist(): Collection { return $this->wishlist; }
+
 }
 
     

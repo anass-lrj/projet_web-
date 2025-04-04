@@ -1,0 +1,22 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Ma Wishlist{% endblock %}
+
+{% block content %}
+    <h1>Ma Wishlist</h1>
+
+    {% if wishlistItems is empty %}
+        <p>Votre wishlist est vide.</p>
+    {% else %}
+        <ul>
+            {% for wishlistItem in wishlistItems %}
+                <li>
+                    <h3>{{ wishlistItem.offre.titre }}</h3>
+                    <p>{{ wishlistItem.offre.description }}</p>
+                    <p>Du {{ wishlistItem.offre.dateDebut|date('d/m/Y') }} au {{ wishlistItem.offre.dateFin|date('d/m/Y') }}</p>
+                    <a href="{{ url_for('wishlist-remove', {'id': wishlistItem.offre.id}) }}" class="btn btn-danger">Supprimer de la wishlist</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

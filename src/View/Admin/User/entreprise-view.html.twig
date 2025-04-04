@@ -34,7 +34,6 @@
             </div>
         </div>
         <div class="mt-5">
-        <pre>{{ dump(OffreDeStage) }}</pre>
             <h2>Offres liées à cette entreprise</h2>
             {% if offres is not empty %}
                 <div class="row">
@@ -46,6 +45,9 @@
                                     <p class="card-text"><strong>Description :</strong> {{ offre.description|slice(0, 100) }}...</p>
                                     <p class="card-text"><strong>Durée :</strong> {{ offre.duree|default('Non spécifiée') }} mois</p>
                                     <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
+                                       <a href="{{ url_for('offre-details', {'id': offre.id}) }}" class="btn btn-secondary">
+                            <i class="bi bi-eye"></i> Aperçu
+                        </a>
                                 </div>
                             </div>
                         </div>

@@ -1,0 +1,27 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Gestion des Compétences</h1>
+
+    <form method="POST" action="{{ url_for('competence-add') }}" class="mb-4">
+        <div class="form-group">
+            <label for="nom">Nom de la compétence</label>
+            <input type="text" class="form-control" id="nom" name="nom" placeholder="Entrez une compétence" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+    </form>
+
+    <h2>Liste des Compétences</h2>
+    <ul class="list-group">
+        {% for competence in competences %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ competence.nom }}
+                <form method="POST" action="{{ url_for('competence-delete', {id: competence.id}) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')">Supprimer</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

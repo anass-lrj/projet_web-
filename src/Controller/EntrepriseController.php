@@ -25,7 +25,6 @@ class EntrepriseController
 
     public function registerRoutes($app)
     {
-        $app->get('/entreprises', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list')->add(UserMiddleware::class);
         $app->get('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->setName('entreprise-edit')->add(UserMiddleware::class);
         $app->post('/entreprises/edit/{id}', EntrepriseController::class . ':editEntreprise')->add(UserMiddleware::class);
         $app->get('/entreprises/add', EntrepriseController::class . ':editEntreprise')->setName('entreprises-add')->add(UserMiddleware::class);
@@ -34,7 +33,10 @@ class EntrepriseController
         $app->get('/entreprises/aperçu/{id}', EntrepriseController::class . ':aperçuEntreprise')->setName('entreprise-aperçu')->add(UserMiddleware::class);
         $app->get('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->setName('entreprise-note')->add(UserMiddleware::class);
         $app->post('/entreprises/{id}/note', EntrepriseController::class . ':noterEntreprise')->add(UserMiddleware::class);
-}
+        $app->get('/entreprises[/{page}]', EntrepriseController::class . ':listEntreprises')->setName('entreprises-list')->add(UserMiddleware::class);        
+
+
+    }
 
 
     public function editEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -154,17 +156,26 @@ class EntrepriseController
         // Appliquer le filtrage par domaine si un domaine est sélectionné
         if (!empty($domaineId)) {
             $qb->andWhere('e.domaine = :domaine')
-            ->setParameter('domaine', $domaineId);
+                ->setParameter('domaine', $domaineId);
         }
 
         // Appliquer la recherche par nom si une requête est donnée
         if (!empty($searchQuery)) {
             $qb->andWhere('e.titre LIKE :search')
-            ->setParameter('search', '%' . $searchQuery . '%');
+                ->setParameter('search', '%' . $searchQuery . '%');
         }
 
-        // Exécuter la requête
+        // Pagination
+        $page = isset($args['page']) ? (int)$args['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $qb->setMaxResults($limit)->setFirstResult($offset);
         $entreprises = $qb->getQuery()->getResult();
+
+        // Récupérer le nombre total d'entreprises
+        $totalEntreprises = $em->getRepository(Entreprise::class)->count([]);
+        $totalPages = ceil($totalEntreprises / $limit);
 
         // Récupérer tous les domaines pour le filtre
         $domaines = $em->getRepository(Domaine::class)->findAll();
@@ -180,8 +191,11 @@ class EntrepriseController
             'selectedDomaine' => $domaineId,
             'searchQuery' => $searchQuery,
             'user' => $user,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
         ]);
     }
+
 
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
