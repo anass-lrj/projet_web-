@@ -2,27 +2,45 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1>Détails de l'offre : {{ offre.titre }}</h1>
-    <p><strong>Description :</strong> {{ offre.description }}</p>
-    <p><strong>Date de début :</strong> {{ offre.dateDebut|date('d/m/Y') }}</p>
-    <p><strong>Date de fin :</strong> {{ offre.dateFin|date('d/m/Y') }}</p>
-    <p><strong>Entreprise :</strong> {{ offre.entreprise.nom }}</p>
-    <p><strong>Rémunération :</strong> {{ offre.remuneration }} €</p>
-                <p><strong>Nombre de candidatures :</strong> {{ nombreCandidatures }}</p>
-
-    <p><strong>Compétences requises :</strong></p>
-    <ul>
-        {% for competence in offre.competences %}
-            <li>{{ competence.nom }}</li>
-        {% endfor %}
-    </ul>
-
-    <!-- Bouton Postuler -->
-    <a href="{{ url_for('offre-postuler', {'id': offre.id}) }}" class="btn btn-primary">
-        <i class="bi bi-pencil-square"></i> Postuler
-    </a>
-
-    <!-- Bouton Retour -->
-    <a href="{{ url_for('offre-list') }}" class="btn btn-secondary">Retour à la liste</a>
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h1 class="h4">Détails de l'offre : {{ offre.titre }}</h1>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Description :</strong></p>
+                    <p>{{ offre.description }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Entreprise :</strong> {{ offre.entreprise.nom }}</p>
+                    <p><strong>Rémunération :</strong> {{ offre.remuneration }} €</p>
+                    <p><strong>Date de début :</strong> {{ offre.dateDebut|date('d/m/Y') }}</p>
+                    <p><strong>Date de fin :</strong> {{ offre.dateFin|date('d/m/Y') }}</p>
+                </div>
+            </div>
+            <hr>
+            <p><strong>Compétences requises :</strong></p>
+            <ul class="list-group">
+                {% for competence in offre.competences %}
+                    <li class="list-group-item">{{ competence.nom }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card-footer text-center">
+            <!-- Bouton Postuler -->
+            {% if offre.id in candidatures %}
+                <button class="btn btn-secondary" disabled>
+                    <i class="bi bi-check-circle"></i> Vous avez déjà postulé
+                </button>
+            {% else %}
+                <a href="{{ url_for('offre-postuler', {'id': offre.id}) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil-square"></i> Postuler
+                </a>
+            {% endif %}
+            <!-- Bouton Retour -->
+            <a href="{{ url_for('offre-list') }}" class="btn btn-outline-secondary ms-2">Retour à la liste</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
