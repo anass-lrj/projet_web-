@@ -52,10 +52,7 @@
                         <p class="card-text"><strong>Entreprise :</strong> {{ offre.entreprise.titre }}</p>
                         <p class="card-text"><strong>Durée :</strong> {{ offre.duree }} mois</p>
                         <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
-                        {% if CurrentUser.role == 'admin' or currentUser.role == 'pilote' %}
-                            <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
-                            <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
-                        {% endif %}
+                       
                         <p class="card-text"><strong>Compétences recherchées :</strong></p>
                         <ul>
                             {% for competence in offre.competences %}
@@ -69,6 +66,8 @@
                             <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
                             <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
                         {% endif %}
+                                                {% if currentUser.role == 'admin' or currentUser.role == 'user' %}
+
                         <form method="POST" action="{{ url_for('wishlist-toggle', {id: offre.id}) }}" class="d-inline">
                         
                             <button type="submit" class="btn {% if offre.id in wishlist %}btn-warning{% else %}btn-outline-warning{% endif %} bi bi-heart">
@@ -77,6 +76,8 @@
                                 {% else %}
                                     Ajouter à la Wishlist
                                 {% endif %}
+                                                        {% endif %}
+
                             </button>
                         </form>
                     </div>
