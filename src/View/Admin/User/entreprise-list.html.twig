@@ -4,10 +4,10 @@
 <div class="container mt-4">
 {% if user.role == 'admin' or user.role == 'pilote' %}
         <a href="{{ url_for('entreprises-add') }}" class="btn btn-primary bi bi-plus-circle mb-4"> Ajouter une entreprise</a>
-    {% endif %}
-      <a href="{{ url_for('domaines-list') }}" class="btn btn-success shadow-sm">
-                    <i class="fas fa-cogs"></i> Gérer les domaines
-                </a>
+    <a href="{{ url_for('domaines-list') }}" class="btn btn-success shadow-sm">
+        <i class="fas fa-cogs"></i> Gérer les domaines
+    </a>
+{% endif %}
 
     <!-- Formulaire de recherche et de filtrage -->
     <form method="GET" action="{{ url_for('entreprises-list') }}" class="d-flex mb-4">
