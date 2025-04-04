@@ -3,7 +3,41 @@
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4">Gestion des utilisateurs</h2>
+    
     <div class="row">
+    <div class="d-flex justify-content-end mb-3">
+        <a href="/admin/user/add" class="btn btn-primary">Ajouter un utilisateur</a>
+    </div>
+
+      <!-- Formulaire de filtre -->
+    <form method="GET" action="{{ url_for('user-list') }}" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="prenom">Prénom</label>
+                <input type="text" id="prenom" name="prenom" class="form-control" value="{{ prenom|default('') }}" placeholder="Rechercher par prénom">
+            </div>
+            <div class="col-md-4">
+                <label for="nom">Nom</label>
+                <input type="text" id="nom" name="nom" class="form-control" value="{{ nom|default('') }}" placeholder="Rechercher par nom">
+            </div>
+            <div class="col-md-4">
+                <label for="role">Rôle</label>
+                <select id="role" name="role" class="form-control">
+                    <option value="">Tous les rôles</option>
+                    <option value="admin" {% if selectedRole == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="pilote" {% if selectedRole == 'pilote' %}selected{% endif %}>Pilote</option>
+                    <option value="user" {% if selectedRole == 'user' %}selected{% endif %}>Utilisateur</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <a href="{{ url_for('user-list') }}" class="btn btn-secondary">Réinitialiser les filtres</a>
+        </div>
+    </form>
+
+
+       
         {% for user in users %}
             <div class="col-md-4 mb-4">
                 <div class="card shadow-sm">

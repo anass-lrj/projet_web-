@@ -14,7 +14,6 @@
                         <p><strong>Lettre de motivation :</strong> {{ candidature.lettreMotivation }}</p>
                         <p><strong>CV :</strong> {{ candidature.cv }}</p>
                         <p><strong>Téléphone :</strong> {{ user.telephone }}</p>
-                        <p><strong>Statut :</strong> {{ candidature.statut }}</p>
                     </div>
                     <div>
                         <a href="{{ url_for('entreprise-aperçu', {'id': candidature.offre.entreprise.id}) }}" class="btn btn-primary btn-sm ms-2">

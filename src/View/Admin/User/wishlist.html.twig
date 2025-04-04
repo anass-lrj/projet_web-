@@ -1,25 +1,35 @@
 {% extends "layout.html.twig" %}
 
-{% block title %}Ma Wishlist{% endblock %}
-
 {% block content %}
+<div class="container mt-4">
     <h1>Ma Wishlist</h1>
 
-    {% if wishlistItems is empty %}
-        <p>Votre wishlist est vide.</p>
-    {% else %}
-        <ul>
-            {% for wishlistItem in wishlistItems %}
-                <li>
-                    <h3>{{ wishlistItem.offre.titre }}</h3>
-                    <p>{{ wishlistItem.offre.description }}</p>
-                    <p>Du {{ wishlistItem.offre.dateDebut|date('d/m/Y') }} au {{ wishlistItem.offre.dateFin|date('d/m/Y') }}</p>
-                          <a href="{{ url_for('offre-details', {'id': offre.id}) }}" class="btn btn-secondary">
-                            <i class="bi bi-eye"></i> Aperçu
-                        </a>
-                    <a href="{{ url_for('wishlist-remove', {'id': wishlistItem.offre.id}) }}" class="btn btn-danger">Supprimer de la wishlist</a>
-                </li>
+    {% if wishlistItems|length > 0 %}
+        <div class="row">
+            {% for item in wishlistItems %}
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.offre.titre }}</h5>
+                            <p class="card-text"><strong>Entreprise :</strong> {{ item.offre.entreprise.titre }}</p>
+                            <p class="card-text"><strong>Ville :</strong> {{ item.offre.ville|default('Non spécifiée') }}</p>
+                            <p class="card-text"><strong>Durée :</strong> {{ item.offre.duree }} mois</p>
+                            <p class="card-text"><strong>Rémunération :</strong> {{ item.offre.remuneration|default('Non précisée') }} €/mois</p>
+
+                            <!-- Bouton Aperçu -->
+                            <a href="{{ url_for('offre-details', {id: item.offre.id}) }}" class="btn btn-primary">Aperçu</a>
+
+                            <!-- Bouton pour retirer de la wishlist -->
+                            <form method="post" action="{{ url_for('wishlist-toggle', {id: item.offre.id}) }}" class="d-inline">
+                                <button type="submit" class="btn btn-danger">Retirer de la Wishlist</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
+    {% else %}
+        <p>Votre wishlist est vide.</p>
     {% endif %}
+</div>
 {% endblock %}

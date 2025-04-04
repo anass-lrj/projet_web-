@@ -9,23 +9,29 @@
                     <i class="fas fa-cogs"></i> Gérer les domaines
                 </a>
 
-    <!-- Formulaire de recherche et de filtrage -->
-    <form method="GET" action="{{ url_for('entreprises-list') }}" class="d-flex mb-4">
-        <input type="text" name="search" id="search" class="form-control me-2" 
-               placeholder="Rechercher une entreprise" value="{{ searchQuery }}">
-
-               
-        
-        <select name="domaine_id" class="form-control me-2">
-            <option value="">-- Tous les domaines --</option>
-            {% for domaine in domaines %}
-                <option value="{{ domaine.id }}" {% if selectedDomaine|default('') == domaine.id|default('') %}selected{% endif %}>
-                    {{ domaine.nom }}
-                </option>
-            {% endfor %}
-        </select><br>
-        <br>
-        <button type="submit" class="btn btn-secondary">Rechercher</button>
+     <!-- Formulaire de filtre -->
+    <form method="GET" action="{{ url_for('entreprises-list') }}" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="domaine_id">Domaine</label>
+                <select id="domaine_id" name="domaine_id" class="form-control">
+                    <option value="">Tous les domaines</option>
+                    {% for domaine in domaines %}
+                        <option value="{{ domaine.id }}" {% if selectedDomaine == domaine.id %}selected{% endif %}>
+                            {{ domaine.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search">Recherche</label>
+                <input type="text" id="search" name="search" class="form-control" value="{{ searchQuery|default('') }}" placeholder="Rechercher par nom">
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <a href="{{ url_for('entreprises-list') }}" class="btn btn-secondary">Réinitialiser les filtres</a>
+        </div>
     </form>
     
     
