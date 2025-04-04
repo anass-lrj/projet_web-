@@ -8,20 +8,22 @@
             {% for candidature in candidatures %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
-                        <!-- Titre de l'offre -->
                         <strong>{{ candidature.offre.titre }}</strong><br>
                         <span>{{ candidature.offre.description }}</span><br>
                         <small class="text-muted">Postulé le : {{ candidature.datePostulation|date('d/m/Y') }}</small><br>
+                        <p><strong>Lettre de motivation :</strong> {{ candidature.lettreMotivation }}</p>
+                        <p><strong>CV :</strong> {{ candidature.cv }}</p>
+                        <p><strong>Téléphone :</strong> {{ user.telephone }}</p>
+                        <p><strong>Statut :</strong> {{ candidature.statut }}</p>
                     </div>
                     <div>
                         <a href="{{ url_for('entreprise-aperçu', {'id': candidature.offre.entreprise.id}) }}" class="btn btn-primary btn-sm ms-2">
-                                    <i class="bi bi-eye"></i> Entreprise
-                                </a>
-                                <!-- Bouton Aperçu -->
-                                <a href="{{ url_for('offre-details', {'id': candidature.offre.id}) }}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> offre
-                                </a>
-
+                            <i class="bi bi-eye"></i> Entreprise
+                        </a>
+                        <!-- Bouton Aperçu -->
+                        <a href="{{ url_for('offre-details', {'id': candidature.offre.id}) }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> Offre
+                        </a>
                     </div>
                 </li>
             {% endfor %}
