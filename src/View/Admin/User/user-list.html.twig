@@ -29,6 +29,9 @@
                         <p class="card-text"><strong>Date de naissance :</strong> {{ user.dateNaissance|date('d/m/Y') }}</p>
                         <p class="card-text"><strong>Date d'inscription :</strong> {{ user.dateCreation|date('d/m/Y H:i:s') }}</p>
                         <p class="card-text"><strong>Rôle :</strong> {{ user.role }}</p>
+                                        <p class="card-text">Nombre de candidatures {{ userCandidatures[user.id]|default(0) }}</p> 
+
+
 
                         {% if currentUser.role == 'admin' %}
                             <a href="{{ url_for('user-edit', {idUser: user.id}) }}" class="btn btn-secondary">Modifier</a>

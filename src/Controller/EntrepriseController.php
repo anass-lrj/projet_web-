@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManager;
 use App\Middlewares\UserMiddleware;
 use App\Domain\Domaine;
 use App\Domain\Evaluation;
+use App\Domain\Candidature;
 
 class EntrepriseController
 {
@@ -197,34 +198,44 @@ class EntrepriseController
     }
 
 
+  
     public function aperçuEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $entityManager = $this->container->get(EntityManager::class);
-
+    
         // Vérifie si l'ID est fourni
         if (!isset($args['id'])) {
             $response->getBody()->write("ID d'entreprise non fourni !");
             return $response->withStatus(400);
         }
-
+    
         // Recherche de l'entreprise
         $entreprise = $entityManager->getRepository(Entreprise::class)->find($args['id']);
-
+    
         if (!$entreprise) {
             $response->getBody()->write("Entreprise non trouvée !");
             return $response->withStatus(404);
         }
-
+    
         // Récupérer les offres associées à cette entreprise
         $offres = $entreprise->getOffresDeStage();
- 
+    
+        // Calculer le nombre total de candidatures pour toutes les offres
+        $nombreTotalCandidatures = 0;
+        foreach ($offres as $offre) {
+            $nombreTotalCandidatures += $entityManager->getRepository(Candidature::class)->count(['offre' => $offre]);
+        }
+    
         // Affichage de la vue avec les détails de l'entreprise
         $view = Twig::fromRequest($request);
         return $view->render($response, 'Admin/User/entreprise-view.html.twig', [
             'entrepriseEntity' => $entreprise,
             'offres' => $offres,
+            'nombreOffres' => count($offres), // Nombre d'offres
+            'nombreTotalCandidatures' => $nombreTotalCandidatures, // Nombre total de candidatures
         ]);
     }
+
     
     public function noterEntreprise(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {

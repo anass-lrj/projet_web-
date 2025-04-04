@@ -15,6 +15,7 @@ use App\Domain\User;
 use Slim\Routing\RouteContext;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Routing\RouteCollectorProxy;
+use App\Domain\Candidature;
 
 class UserAdminController
 {
@@ -151,40 +152,47 @@ class UserAdminController
    }
 
 
-public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $em = $this->container->get(EntityManager::class);
-    $queryParams = $request->getQueryParams();
-    $role = $queryParams['role'] ?? null;
-
-    $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
-
-    if (!empty($role)) {
-        $queryBuilder->where('u.role = :role')
-                     ->setParameter('role', $role);
-    }
-
-    // Pagination
-    $page = isset($args['page']) ? (int)$args['page'] : 1;
-    $limit = 10;
-    $offset = ($page - 1) * $limit;
-
-    $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
-    $users = $queryBuilder->getQuery()->getResult();
-
-    // Récupérer le nombre total d'utilisateurs
-    $totalUsers = $em->getRepository(User::class)->count([]);
-    $totalPages = ceil($totalUsers / $limit);
-
-    $view = Twig::fromRequest($request);
-
-    return $view->render($response, 'Admin/User/user-list.html.twig', [
-        'users' => $users,
-        'selectedRole' => $role,
-        'currentPage' => $page,
-        'totalPages' => $totalPages,
-    ]);
-}
+   public function list(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+   {
+       $em = $this->container->get(EntityManager::class);
+       $queryParams = $request->getQueryParams();
+       $role = $queryParams['role'] ?? null;
+   
+       $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+   
+       if (!empty($role)) {
+           $queryBuilder->where('u.role = :role')
+                        ->setParameter('role', $role);
+       }
+   
+       // Pagination
+       $page = isset($args['page']) ? (int)$args['page'] : 1;
+       $limit = 10;
+       $offset = ($page - 1) * $limit;
+   
+       $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
+       $users = $queryBuilder->getQuery()->getResult();
+   
+       // Récupérer le nombre total d'utilisateurs
+       $totalUsers = $em->getRepository(User::class)->count([]);
+       $totalPages = ceil($totalUsers / $limit);
+   
+       // Récupérer le nombre de candidatures pour chaque utilisateur
+       $userCandidatures = [];
+       foreach ($users as $user) {
+           $userCandidatures[$user->getId()] = $em->getRepository(Candidature::class)->count(['user' => $user]);
+       }
+   
+       $view = Twig::fromRequest($request);
+   
+       return $view->render($response, 'Admin/User/user-list.html.twig', [
+           'users' => $users,
+           'userCandidatures' => $userCandidatures, // Transmettre les candidatures à la vue
+           'selectedRole' => $role,
+           'currentPage' => $page,
+           'totalPages' => $totalPages,
+       ]);
+   }
 
 
 
