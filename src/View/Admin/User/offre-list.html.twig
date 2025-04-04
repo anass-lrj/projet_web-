@@ -14,8 +14,10 @@
                         <p class="card-text"><strong>Ville :</strong> {{ offre.ville|default('Non spécifiée') }}</p>
                         <p class="card-text"><strong>Durée :</strong> {{ offre.duree }} mois</p>
                         <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
-                        <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
-                        <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
+                        {% if user.role == 'admin' or user.role == 'pilote' %}
+                            <a href="{{ url_for('offre-edit', {id: offre.id}) }}" class="btn btn-secondary bi bi-pencil"> Modifier</a>
+                            <a href="{{ url_for('offre-delete', {id: offre.id}) }}" class="btn btn-danger bi bi-trash3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')"> Supprimer</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
