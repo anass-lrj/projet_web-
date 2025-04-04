@@ -1,0 +1,35 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Offres postulées par {{ user.prenom }} {{ user.nom }}</h2>
+    {% if candidatures is not empty %}
+        <ul class="list-group">
+            {% for candidature in candidatures %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <!-- Titre de l'offre -->
+                        <strong>{{ candidature.offre.titre }}</strong><br>
+                        <span>{{ candidature.offre.description }}</span><br>
+                        <small class="text-muted">Postulé le : {{ candidature.datePostulation|date('d/m/Y') }}</small><br>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('entreprise-aperçu', {'id': candidature.offre.entreprise.id}) }}" class="btn btn-primary btn-sm ms-2">
+                                    <i class="bi bi-eye"></i> Entreprise
+                                </a>
+                                <!-- Bouton Aperçu -->
+                                <a href="{{ url_for('offre-details', {'id': candidature.offre.id}) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> offre
+                                </a>
+
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Cet utilisateur n'a postulé à aucune offre.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

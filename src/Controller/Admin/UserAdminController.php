@@ -36,6 +36,7 @@ class UserAdminController
         $group->get('/add', UserAdminController::class . ':edit')->setName('user-add');
         $group->post('/add', UserAdminController::class . ':edit')->setName('user-add');
         $group->get('/delete/{idUser}', UserAdminController::class . ':delete')->setName('user-delete');
+        $group->get('/offres-postulees/{idUser}', UserAdminController::class . ':offresPostulees')->setName('offres_postulees_user');
     })->add(AdminMiddleware::class) // Vérifie si c'est un admin
     ->add(PiloteMiddleware::class) // Laisse passer les pilotes
     ->add(UserMiddleware::class); // Vérifie si l'utilisateur est connecté
@@ -225,6 +226,25 @@ class UserAdminController
         'users' => $users,
         'prenom' => $prenom,
         'nom' => $nom,
+    ]);
+}
+
+public function offresPostulees(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $user = $em->getRepository(User::class)->find($args['idUser']);
+
+    if (!$user) {
+        $response->getBody()->write("Utilisateur non trouvé !");
+        return $response->withStatus(404);
+    }
+
+    $candidatures = $em->getRepository(Candidature::class)->findBy(['user' => $user]);
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offres_postulees.html.twig', [
+        'user' => $user,
+        'candidatures' => $candidatures,
     ]);
 }
 

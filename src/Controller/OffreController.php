@@ -43,6 +43,7 @@ class OffreController
         $app->get('/offres/postuler/{id}', OffreController::class . ':postuler')->setName('offre-postuler')->add(UserMiddleware::class);
         $app->get('/offres/details/{id}', OffreController::class . ':details')->setName('offre-details')->add(UserMiddleware::class);
         $app->post('/offres/postuler/{id}', OffreController::class . ':soumettreCandidature')->setName('offre-postuler-submit')->add(UserMiddleware::class);
+        $app->get('/offres/{idOffre}/candidatures', OffreController::class . ':voirCandidatures')->setName('offres_postulees_user');
     }
 
 
@@ -195,11 +196,22 @@ public function soumettreCandidature(ServerRequestInterface $request, ResponseIn
     $candidature->setMessage($data['message'] ?? null);
 
     // Gérer l'upload du CV
+    $uploadDir = __DIR__ . '/../../uploads/cv/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true); // Crée le dossier avec les permissions nécessaires
+    }
     if (isset($uploadedFiles['cv']) && $uploadedFiles['cv']->getError() === UPLOAD_ERR_OK) {
         $cv = $uploadedFiles['cv'];
         $filename = sprintf('%s_%s', uniqid(), $cv->getClientFilename());
-        $cv->moveTo(__DIR__ . '/../../uploads/cv/' . $filename);
-        $candidature->setCv($filename);
+        $uploadPath = __DIR__ . '/../../uploads/cv/' . $filename;
+
+        try {
+            $cv->moveTo(__DIR__ . '/../../uploads/cv/' . $filename);
+            $candidature->setCv($filename);
+        } catch (\Exception $e) {
+            $response->getBody()->write("Erreur lors de l'upload du fichier : " . $e->getMessage());
+            return $response->withStatus(500);
+        }
     }
 
     // Sauvegarder la candidature
@@ -444,5 +456,23 @@ public function details(ServerRequestInterface $request, ResponseInterface $resp
     ]);
 }
 
+public function voirCandidatures(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $em = $this->container->get(EntityManager::class);
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['idOffre']);
+
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    $candidatures = $em->getRepository(Candidature::class)->findBy(['offre' => $offre]);
+
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offres_postulees.html.twig', [
+        'offre' => $offre,
+        'candidatures' => $candidatures,
+    ]);
+}
 
 }
