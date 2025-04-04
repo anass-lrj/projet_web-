@@ -396,6 +396,7 @@ public function postuler(ServerRequestInterface $request, ResponseInterface $res
     ]);
 }
 
+
 public function details(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
     $em = $this->container->get(EntityManager::class);
@@ -407,10 +408,14 @@ public function details(ServerRequestInterface $request, ResponseInterface $resp
         return $response->withStatus(404);
     }
 
+    // Compter le nombre de candidatures associées à cette offre
+    $nombreCandidatures = $em->getRepository(Candidature::class)->count(['offre' => $offre]);
+
     // Rendre la vue Twig pour afficher les détails de l'offre
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/offre-details.html.twig', [
         'offre' => $offre,
+        'nombreCandidatures' => $nombreCandidatures, // Transmettre le nombre de candidatures à la vue
     ]);
 }
 
