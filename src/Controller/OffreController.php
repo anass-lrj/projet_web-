@@ -112,80 +112,104 @@ class OffreController
             'currentPage' => $page,
             'totalPages' => $totalPages,
         ]);
+
+    if ($entrepriseId) {
+        $qb->andWhere('o.entreprise = :entrepriseId')
+           ->setParameter('entrepriseId', $entrepriseId);
     }
 
+    $offres = $qb->getQuery()->getResult();
 
-    public function editOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
+    // Récupération des données pour les filtres
+    $competences = $em->getRepository(Competence::class)->findAll();
+    $entreprises = $em->getRepository(Entreprise::class)->findAll();
+
     $user = $request->getAttribute('user');
-
-    // Vérifier si l'utilisateur est admin ou pilote
-    if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
-        $response->getBody()->write("Accès refusé !");
-        return $response->withStatus(403);
+    $wishlist = [];
+    $candidatures = [];
+    if ($user) {
+        $wishlist = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Wishlist::class)->findBy(['user' => $user]));
+        $candidatures = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Candidature::class)->findBy(['user' => $user]));
     }
 
-    $entityManager = $this->container->get(EntityManager::class);
-    $add = !isset($args['id']);
-    $offre = null;
+    $view = Twig::fromRequest($request);
+    return $view->render($response, 'Admin/User/offre-list.html.twig', [
+        'offres' => $offres,
+        'wishlist' => $wishlist,
+        'candidatures' => $candidatures, // Ajout des candidatures
+        'competences' => $competences,
+        'entreprises' => $entreprises,
+        'filters' => [
+            'competence' => $competenceId,
+            'nom' => $offreName,
+            'entreprise' => $entrepriseId,
+        ],
+    ]);
+}
 
-    if ($add) {
-        $offre = new OffreDeStage('', '', new \DateTime(), new \DateTime(), 0, new Entreprise());
-    } else {
-        $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
-        if (!$offre) {
-            $response->getBody()->write("Offre de stage non trouvée !");
-            return $response->withStatus(404);
-        }
+
+public function soumettreCandidature(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $user = $request->getAttribute('user'); // Récupérer l'utilisateur connecté
+    $em = $this->container->get(EntityManager::class);
+
+    // Vérifier si l'utilisateur est connecté
+    if (!$user) {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('login'); // Rediriger vers la page de connexion si non connecté
+        return $response->withHeader('Location', $url)->withStatus(302);
     }
 
-if ($request->getMethod() === 'POST') {
+    // Récupérer l'offre à partir de l'ID
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+    if (!$offre) {
+        $response->getBody()->write("Offre non trouvée !");
+        return $response->withStatus(404);
+    }
+
+    // Vérifier si une candidature existe déjà pour cet utilisateur et cette offre
+    $existingCandidature = $em->getRepository(Candidature::class)->findOneBy([
+        'user' => $user,
+        'offre' => $offre,
+    ]);
+
+    if ($existingCandidature) {
+        $response->getBody()->write("Vous avez déjà postulé à cette offre !");
+        return $response->withStatus(400); // Code HTTP 400 : Mauvaise requête
+    }
+
+    // Récupérer les données du formulaire
     $data = $request->getParsedBody();
+    $uploadedFiles = $request->getUploadedFiles();
 
-    $offre->setTitre($data['titre'] ?? '');
-    $offre->setDescription($data['description'] ?? '');
-    $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
-    $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
-    $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
+    // Créer une nouvelle candidature
+    $candidature = new Candidature();
+    $candidature->setUser($user);
+    $candidature->setOffre($offre);
+    $candidature->setNom($data['nom']);
+    $candidature->setPrenom($data['prenom']);
+    $candidature->setAdresse($data['adresse']);
+    $candidature->setLettreMotivation($data['lettreMotivation']);
+    $candidature->setTelephone($data['telephone'] ?? null);
+    $candidature->setPortfolio($data['portfolio'] ?? null);
+    $candidature->setMessage($data['message'] ?? null);
 
-    if (!empty($data['entreprise'])) {
-        $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
-        if ($entreprise) {
-            $offre->setEntreprise($entreprise);
-        }
+    // Gérer l'upload du CV
+    if (isset($uploadedFiles['cv']) && $uploadedFiles['cv']->getError() === UPLOAD_ERR_OK) {
+        $cv = $uploadedFiles['cv'];
+        $filename = sprintf('%s_%s', uniqid(), $cv->getClientFilename());
+        $cv->moveTo(__DIR__ . '/../../uploads/cv/' . $filename);
+        $candidature->setCv($filename);
     }
 
-    // Gestion des compétences
-    $offre->getCompetences()->clear();
-    if (!empty($data['competences']) && !in_array('null', $data['competences'])) {
-        foreach ($data['competences'] as $competenceId) {
-            $competence = $entityManager->getRepository(Competence::class)->find($competenceId);
-            if ($competence) {
-                $offre->addCompetence($competence);
-            }
-        }
-    }
+    // Sauvegarder la candidature
+    $em->persist($candidature);
+    $em->flush();
 
-    $entityManager->persist($offre);
-    $entityManager->flush();
-
+    // Rediriger vers la liste des offres
     $routeParser = RouteContext::fromRequest($request)->getRouteParser();
     $url = $routeParser->urlFor('offre-list');
     return $response->withHeader('Location', $url)->withStatus(302);
-}
-
-    $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
-
-    $competences = $entityManager->getRepository(Competence::class)->findAll();
-    
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/offre-edit.html.twig', [
-        'offreEntity' => $offre,
-        'add' => $add,
-        'entreprises' => $entreprises,
-        'competences' => $competences,
-    ]);
-
 }
 
 public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -400,76 +424,25 @@ public function postuler(ServerRequestInterface $request, ResponseInterface $res
 public function details(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
     $em = $this->container->get(EntityManager::class);
-
-    // Récupérer l'offre à partir de l'ID
     $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+
     if (!$offre) {
         $response->getBody()->write("Offre non trouvée !");
         return $response->withStatus(404);
     }
 
-    // Compter le nombre de candidatures associées à cette offre
-    $nombreCandidatures = $em->getRepository(Candidature::class)->count(['offre' => $offre]);
+    $user = $request->getAttribute('user');
+    $candidatures = [];
+    if ($user) {
+        $candidatures = array_map(fn($item) => $item->getOffre()->getId(), $em->getRepository(Candidature::class)->findBy(['user' => $user]));
+    }
 
-    // Rendre la vue Twig pour afficher les détails de l'offre
     $view = Twig::fromRequest($request);
     return $view->render($response, 'Admin/User/offre-details.html.twig', [
         'offre' => $offre,
-        'nombreCandidatures' => $nombreCandidatures, // Transmettre le nombre de candidatures à la vue
+        'candidatures' => $candidatures, // Passer les candidatures à la vue
     ]);
 }
 
-public function soumettreCandidature(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-{
-    $user = $request->getAttribute('user'); // Récupérer l'utilisateur connecté
-    $em = $this->container->get(EntityManager::class);
-
-    // Vérifier si l'utilisateur est connecté
-    if (!$user) {
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $url = $routeParser->urlFor('login'); // Rediriger vers la page de connexion si non connecté
-        return $response->withHeader('Location', $url)->withStatus(302);
-    }
-
-    // Récupérer l'offre à partir de l'ID
-    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
-    if (!$offre) {
-        $response->getBody()->write("Offre non trouvée !");
-        return $response->withStatus(404);
-    }
-
-    // Récupérer les données du formulaire
-    $data = $request->getParsedBody();
-    $uploadedFiles = $request->getUploadedFiles();
-
-    // Créer une nouvelle candidature
-    $candidature = new Candidature();
-    $candidature->setUser($user);
-    $candidature->setOffre($offre);
-    $candidature->setNom($data['nom']);
-    $candidature->setPrenom($data['prenom']);
-    $candidature->setAdresse($data['adresse']);
-    $candidature->setLettreMotivation($data['lettreMotivation']);
-    $candidature->setTelephone($data['telephone'] ?? null);
-    $candidature->setPortfolio($data['portfolio'] ?? null);
-    $candidature->setMessage($data['message'] ?? null);
-
-    // Gérer l'upload du CV
-    if (isset($uploadedFiles['cv']) && $uploadedFiles['cv']->getError() === UPLOAD_ERR_OK) {
-        $cv = $uploadedFiles['cv'];
-        $filename = sprintf('%s_%s', uniqid(), $cv->getClientFilename());
-        $cv->moveTo(__DIR__ . '/../../uploads/cv/' . $filename);
-        $candidature->setCv($filename);
-    }
-
-    // Sauvegarder la candidature
-    $em->persist($candidature);
-    $em->flush();
-
-    // Rediriger vers la liste des offres
-    $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-    $url = $routeParser->urlFor('offre-list');
-    return $response->withHeader('Location', $url)->withStatus(302);
-}
 
 }
