@@ -230,29 +230,36 @@ public function delete(ServerRequestInterface $request, ResponseInterface $respo
             'totalPages' => ceil($totalOffres / $limit),
         ]);
     }
+
+
     public function toggleWishlist(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $em = $this->container->get(EntityManager::class);
-        $user = $request->getAttribute('user');
-        $offre = $em->getRepository(OffreDeStage::class)->find($args['id']);
+{
+    $em = $this->container->get(EntityManager::class);
+    $user = $request->getAttribute('user'); // Récupérer l'utilisateur connecté
+    $offre = $em->getRepository(OffreDeStage::class)->find($args['id']); // Récupérer l'offre
 
-        if (!$user || !$offre) {
-            return $response->withStatus(400);
-        }
-
-        $wishlistRepo = $em->getRepository(Wishlist::class);
-        $wishlistItem = $wishlistRepo->findOneBy(['user' => $user, 'offre' => $offre]);
-
-        if ($wishlistItem) {
-            $em->remove($wishlistItem);
-        } else {
-            $wishlistItem = new Wishlist($user, $offre);
-            $em->persist($wishlistItem);
-        }
-
-        $em->flush();
-        return $response->withHeader('Location', '/offres')->withStatus(302);
+    if (!$user || !$offre) {
+        return $response->withStatus(400); // Mauvaise requête si l'utilisateur ou l'offre est introuvable
     }
+
+    $wishlistRepo = $em->getRepository(Wishlist::class);
+    $wishlistItem = $wishlistRepo->findOneBy(['user' => $user, 'offre' => $offre]);
+
+    if ($wishlistItem) {
+        // Si l'offre est déjà dans la wishlist, la supprimer
+        $em->remove($wishlistItem);
+    } else {
+        // Sinon, l'ajouter à la wishlist
+        $wishlistItem = new Wishlist($user, $offre);
+        $em->persist($wishlistItem);
+    }
+
+    $em->flush();
+
+    // Rediriger vers la page précédente
+    $referer = $request->getHeaderLine('Referer');
+    return $response->withHeader('Location', $referer ?: '/offres')->withStatus(302);
+}
 
 public function wishlist(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 {
