@@ -50,7 +50,6 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ offre.titre }}</h5>
                         <p class="card-text"><strong>Entreprise :</strong> {{ offre.entreprise.titre }}</p>
-                        <p class="card-text"><strong>Ville :</strong> {{ offre.ville|default('Non spécifiée') }}</p>
                         <p class="card-text"><strong>Durée :</strong> {{ offre.duree }} mois</p>
                         <p class="card-text"><strong>Rémunération :</strong> {{ offre.remuneration|default('Non précisée') }} €/mois</p>
                         {% if CurrentUser.role == 'admin' or currentUser.role == 'pilote' %}

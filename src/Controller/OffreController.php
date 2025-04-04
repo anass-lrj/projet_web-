@@ -45,7 +45,78 @@ class OffreController
         $app->post('/offres/postuler/{id}', OffreController::class . ':soumettreCandidature')->setName('offre-postuler-submit')->add(UserMiddleware::class);
         $app->get('/offres/{idOffre}/candidatures', OffreController::class . ':voirCandidatures')->setName('offres_postulees_user');
     }
-
+    public function editOffre(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $user = $request->getAttribute('user');
+    
+        // Vérifier si l'utilisateur est admin ou pilote
+        if (!$user || !in_array($user->getRole(), ['admin', 'pilote'])) {
+            $response->getBody()->write("Accès refusé !");
+            return $response->withStatus(403);
+        }
+    
+        $entityManager = $this->container->get(EntityManager::class);
+        $add = !isset($args['id']);
+        $offre = null;
+    
+        if ($add) {
+            $offre = new OffreDeStage('', '', new \DateTime(), new \DateTime(), 0, new Entreprise());
+        } else {
+            $offre = $entityManager->getRepository(OffreDeStage::class)->find($args['id']);
+            if (!$offre) {
+                $response->getBody()->write("Offre de stage non trouvée !");
+                return $response->withStatus(404);
+            }
+        }
+    
+    if ($request->getMethod() === 'POST') {
+        $data = $request->getParsedBody();
+    
+        $offre->setTitre($data['titre'] ?? '');
+        $offre->setDescription($data['description'] ?? '');
+        $offre->setDateDebut(new \DateTime($data['dateDebut'] ?? 'now'));
+        $offre->setDateFin(new \DateTime($data['dateFin'] ?? 'now'));
+        $offre->setRemuneration(isset($data['remuneration']) ? (float) $data['remuneration'] : 0);
+    
+        if (!empty($data['entreprise'])) {
+            $entreprise = $entityManager->getRepository(Entreprise::class)->find($data['entreprise']);
+            if ($entreprise) {
+                $offre->setEntreprise($entreprise);
+            }
+        }
+    
+        // Gestion des compétences
+        $offre->getCompetences()->clear();
+        if (!empty($data['competences']) && !in_array('null', $data['competences'])) {
+            foreach ($data['competences'] as $competenceId) {
+                $competence = $entityManager->getRepository(Competence::class)->find($competenceId);
+                if ($competence) {
+                    $offre->addCompetence($competence);
+                }
+            }
+        }
+    
+        $entityManager->persist($offre);
+        $entityManager->flush();
+    
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $url = $routeParser->urlFor('offre-list');
+        return $response->withHeader('Location', $url)->withStatus(302);
+    }
+    
+        $entreprises = $entityManager->getRepository(Entreprise::class)->findAll();
+    
+        $competences = $entityManager->getRepository(Competence::class)->findAll();
+        
+        $view = Twig::fromRequest($request);
+        return $view->render($response, 'Admin/User/offre-edit.html.twig', [
+            'offreEntity' => $offre,
+            'add' => $add,
+            'entreprises' => $entreprises,
+            'competences' => $competences,
+        ]);
+    
+    }
 
 
     public function listOffres(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
