@@ -112,7 +112,6 @@ class OffreController
             'currentPage' => $page,
             'totalPages' => $totalPages,
         ]);
-    }
 
     if ($entrepriseId) {
         $qb->andWhere('o.entreprise = :entrepriseId')
@@ -442,17 +441,8 @@ public function details(ServerRequestInterface $request, ResponseInterface $resp
     return $view->render($response, 'Admin/User/offre-details.html.twig', [
         'offre' => $offre,
         'candidatures' => $candidatures, // Passer les candidatures à la vue
-    // Compter le nombre de candidatures associées à cette offre
-    $nombreCandidatures = $em->getRepository(Candidature::class)->count(['offre' => $offre]);
-
-    // Rendre la vue Twig pour afficher les détails de l'offre
-    $view = Twig::fromRequest($request);
-    return $view->render($response, 'Admin/User/offre-details.html.twig', [
-        'offre' => $offre,
-        'nombreCandidatures' => $nombreCandidatures, // Transmettre le nombre de candidatures à la vue
     ]);
 }
-
 
 
 }
