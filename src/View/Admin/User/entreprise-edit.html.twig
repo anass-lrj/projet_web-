@@ -39,11 +39,7 @@
 
                  <div class="form-group">
                     <label for="domaine_id">Domaine</label>
-                    <ul>
-                        {% for domaine in domaines %}
-                            <li>{{ domaine.nom }} (ID: {{ domaine.id }})</li>
-                        {% endfor %}
-                    </ul>
+                    
                          <select name="domaine_id" id="domaine_id" class="form-control">
                             <option value="">Sélectionner un domaine</option>
                                 {% for domaine in domaines %}
